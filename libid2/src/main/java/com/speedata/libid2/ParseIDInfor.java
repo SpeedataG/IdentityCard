@@ -164,7 +164,7 @@ public class ParseIDInfor {
         byte c[] = byteArrayToAscii(idminzu).getBytes();
         b[0] = c[0];
         b[1] = c[2];
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < codeAndMinzu.length; i++) {
             if (byteArrayToAscii(b).substring(0, 2).equals
                     (codeAndMinzu[i][0])) {
                 idInfor.setNation(codeAndMinzu[i][1]);

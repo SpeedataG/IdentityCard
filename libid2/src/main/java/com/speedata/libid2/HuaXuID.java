@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
+import android.util.Log;
 
 import com.speedata.libid2.utils.DataConversionUtils;
 import com.speedata.libid2.utils.MyLogger;
@@ -69,11 +70,7 @@ public class HuaXuID implements IID2Service {
         IDDev.OpenSerial(serialport, braut);
         fd = IDDev.getFd();
         logger.e("fd= " + fd);
-        if (searchCard() == STATUE_SERIAL_NULL) {
-            return false;
-        } else {
-            return true;
-        }
+        return searchCard() != STATUE_SERIAL_NULL;
     }
 
 
@@ -231,21 +228,31 @@ public class HuaXuID implements IID2Service {
             thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    searchCard();
-                    selectCard();
-                    SystemClock.sleep(200);
-                    IDDev.clearportbuf(fd);
-                    idInfor = readCard(isNeedFingerprinter);
-                    if (idInfor != null) {
-                        if (!idInfor.isSuccess()) {
-                            String errorMsg = parseReturnState(parseIDInfor.currentStatue);
-                            idInfor.setErrorMsg(errorMsg);
-                            logger.e("---ErrorMsg--" + errorMsg);
-                            callBack.callBack(idInfor);
-                        } else {
-                            idInfor.setSuccess(true);
-                            callBack.callBack(idInfor);
+                    int result = searchCard();
+
+                    Log.d("Reginer", "result"+result);
+                    //寻卡成功之后才执行选卡和读卡
+                    if (result == STATUE_OK_SEARCH) {
+                        selectCard();
+                        SystemClock.sleep(200);
+                        IDDev.clearportbuf(fd);
+                        idInfor = readCard(isNeedFingerprinter);
+                        if (idInfor != null) {
+                            if (!idInfor.isSuccess()) {
+                                String errorMsg = parseReturnState(parseIDInfor.currentStatue);
+                                idInfor.setErrorMsg(errorMsg);
+                                logger.e("---ErrorMsg--" + errorMsg);
+                                callBack.callBack(idInfor);
+                            } else {
+                                idInfor.setSuccess(true);
+                                callBack.callBack(idInfor);
+                            }
                         }
+                    } else {
+                        idInfor = new IDInfor();
+                        idInfor.setSuccess(false);
+                        idInfor.setErrorMsg(mContext.getString(R.string.states7));
+                        callBack.callBack(idInfor);
                     }
                 }
             });

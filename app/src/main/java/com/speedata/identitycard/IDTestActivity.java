@@ -217,7 +217,7 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
                     timer = new Timer();
                 }
                 if (b) {
-                    timer.schedule(new readIDTask(), 1000, 1000);
+                    timer.schedule(new readIDTask(), 20, 3000);
                 } else {
                     timer.cancel();
                     timer = null;
@@ -274,10 +274,11 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
                             message.obj = infor;
                             handler.sendMessage(message);
                         }
-                    }, SerialPort.SERIAL_TTYMT2, 115200, DeviceControl.PowerType.MAIN_AND_EXPAND
-                    , 88, 6);
+                    },
+//                    SerialPort.SERIAL_TTYMT2, 115200, DeviceControl.PowerType.MAIN_AND_EXPAND, 88, 6);
+                    SerialPort.SERIAL_TTYMT1, 115200, DeviceControl.PowerType.MAIN, 106);
 //                    , 94);
-            tvInfor.setText("s:MT2 b:115200 p:88 6");
+            tvInfor.setText("s:MT1 b:115200 p:106");
             if (!result) {
                 new AlertDialog.Builder(this).setCancelable(false).setMessage("二代证模块初始化失败")
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
