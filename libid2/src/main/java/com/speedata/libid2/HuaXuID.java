@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
-import android.util.Log;
 
 import com.speedata.libid2.utils.DataConversionUtils;
 import com.speedata.libid2.utils.MyLogger;
@@ -211,42 +210,46 @@ public class HuaXuID implements IID2Service {
             if (temp0 != null) {
                 System.arraycopy(temp0, 0, bytes, 0, temp0.length);
             }
-            if (temp1 != null)
+            if (temp1 != null && temp0 != null)
                 System.arraycopy(temp1, 0, bytes, temp0.length, temp1.length);
         }
         return bytes;
     }
 
 
-    IDInfor idInfor = null;
-    private Thread thread;
+    private IDInfor idInfor = null;
 
     @Override
     public void getIDInfor(final boolean isNeedFingerprinter) {
         synchronized (this) {
             parseIDInfor.isGet = false;
-            thread = new Thread(new Runnable() {
+            Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     int result = searchCard();
-
-                    Log.d("Reginer", "result"+result);
                     //寻卡成功之后才执行选卡和读卡
                     if (result == STATUE_OK_SEARCH) {
-                        selectCard();
-                        SystemClock.sleep(200);
-                        IDDev.clearportbuf(fd);
-                        idInfor = readCard(isNeedFingerprinter);
-                        if (idInfor != null) {
-                            if (!idInfor.isSuccess()) {
-                                String errorMsg = parseReturnState(parseIDInfor.currentStatue);
-                                idInfor.setErrorMsg(errorMsg);
-                                logger.e("---ErrorMsg--" + errorMsg);
-                                callBack.callBack(idInfor);
-                            } else {
-                                idInfor.setSuccess(true);
-                                callBack.callBack(idInfor);
+
+                        if (selectCard() == STATUE_OK) {
+                            SystemClock.sleep(200);
+                            IDDev.clearportbuf(fd);
+                            idInfor = readCard(isNeedFingerprinter);
+                            if (idInfor != null) {
+                                if (!idInfor.isSuccess()) {
+                                    String errorMsg = parseReturnState(parseIDInfor.currentStatue);
+                                    idInfor.setErrorMsg(errorMsg);
+                                    logger.e("---ErrorMsg--" + errorMsg);
+                                    callBack.callBack(idInfor);
+                                } else {
+                                    idInfor.setSuccess(true);
+                                    callBack.callBack(idInfor);
+                                }
                             }
+                        } else {
+                            idInfor = new IDInfor();
+                            idInfor.setSuccess(false);
+                            idInfor.setErrorMsg(mContext.getString(R.string.states4));
+                            callBack.callBack(idInfor);
                         }
                     } else {
                         idInfor = new IDInfor();

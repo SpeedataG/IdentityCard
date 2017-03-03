@@ -28,11 +28,11 @@ public class ParseIDInfor {
     private Context mContext;
 //    private IDReadCallBack callBack;
 
-//    public ParseIDInfor(IDReadCallBack callBack, Context mContext) {
+    //    public ParseIDInfor(IDReadCallBack callBack, Context mContext) {
 //        this.mContext = mContext;
 //        this.callBack = callBack;
 //    }
-    public ParseIDInfor( Context mContext) {
+    public ParseIDInfor(Context mContext) {
         this.mContext = mContext;
     }
 
@@ -164,10 +164,10 @@ public class ParseIDInfor {
         byte c[] = byteArrayToAscii(idminzu).getBytes();
         b[0] = c[0];
         b[1] = c[2];
-        for (int i = 0; i < codeAndMinzu.length; i++) {
+        for (String[] aCodeAndMinzu : codeAndMinzu) {
             if (byteArrayToAscii(b).substring(0, 2).equals
-                    (codeAndMinzu[i][0])) {
-                idInfor.setNation(codeAndMinzu[i][1]);
+                    (aCodeAndMinzu[0])) {
+                idInfor.setNation(aCodeAndMinzu[1]);
                 break;
             }
         }
@@ -213,7 +213,14 @@ public class ParseIDInfor {
                 e.printStackTrace();
             }
         }
-        System.arraycopy(revbuf, 256 + start_parse, idimg, 0, 1024);
+        try {
+            System.arraycopy(revbuf, 256 + start_parse, idimg, 0, 1024);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+
         byte[] bmp = new byte[14 + 40 + 308 * 126];
         //判断SD卡中是否有解码库文件 不存在需要cp过去
         if (!IDFileUtils.isExit()) {
