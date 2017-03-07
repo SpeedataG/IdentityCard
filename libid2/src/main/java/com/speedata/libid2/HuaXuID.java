@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 
+import com.google.gson.Gson;
 import com.speedata.libid2.utils.DataConversionUtils;
 import com.speedata.libid2.utils.MyLogger;
 
@@ -53,13 +54,14 @@ public class HuaXuID implements IID2Service {
     private Context mContext;
     private IDReadCallBack callBack;
     private ParseIDInfor parseIDInfor;
-    DeviceControl deviceControl;
+    private DeviceControl deviceControl;
 
     @Override
     public boolean initDev(Context mContext, IDReadCallBack callBack, String serialport, int braut,
                            DeviceControl.PowerType power_type,
                            int... gpio) throws
             IOException {
+
         parseIDInfor = new ParseIDInfor(mContext);
         this.mContext = mContext;
         this.callBack = callBack;
@@ -69,6 +71,37 @@ public class HuaXuID implements IID2Service {
         IDDev.OpenSerial(serialport, braut);
         fd = IDDev.getFd();
         logger.e("fd= " + fd);
+        return searchCard() != STATUE_SERIAL_NULL;
+    }
+
+    @Override
+    public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
+
+
+        Config mConfig = null;
+        int[] intArray = new int[0];
+        parseIDInfor = new ParseIDInfor(context);
+        this.mContext = context;
+        this.callBack = callBack;
+        boolean fileExists = FileUtils.fileExists();
+        if (fileExists) {
+            mConfig = new Gson().fromJson(FileUtils.readTxtFile(), Config.class);
+            intArray = new int[mConfig.getId2().getGpio().size()];
+            for (int i = 0; i < mConfig.getId2().getGpio().size(); i++) {
+                intArray[i] = mConfig.getId2().getGpio().get(i);
+            }
+        }
+        int[] gpio = fileExists ? intArray : DeviceType.getGpio();
+        String serialport = fileExists ? mConfig.getId2().getSerialPort() : DeviceType.getSerialPort();
+        int braut = fileExists ? mConfig.getId2().getBraut() : 115200;
+        DeviceControl.PowerType power_type = fileExists ? mConfig.getId2().getPowerType().equals("MAIN") ? DeviceControl.PowerType.MAIN : DeviceControl.PowerType.MAIN_AND_EXPAND :
+                DeviceType.getPowerType();
+
+        deviceControl = new DeviceControl(power_type, gpio);
+        deviceControl.PowerOnDevice();
+        IDDev = new SerialPort();
+        IDDev.OpenSerial(serialport, braut);
+        fd = IDDev.getFd();
         return searchCard() != STATUE_SERIAL_NULL;
     }
 

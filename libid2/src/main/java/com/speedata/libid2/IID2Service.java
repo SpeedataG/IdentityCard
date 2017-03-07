@@ -20,8 +20,11 @@ public interface IID2Service {
      * @param gpio       上电GPIO
      */
     public boolean initDev(Context mContext, IDReadCallBack callBack, String serialport, int braut,
-                        DeviceControl.PowerType power_type,
-                        int... gpio) throws IOException;
+                           DeviceControl.PowerType power_type,
+                           int... gpio) throws IOException;
+
+
+    boolean initDev(Context context, IDReadCallBack callBack) throws IOException;
 
     public void releaseDev() throws IOException;
 
@@ -37,6 +40,6 @@ public interface IID2Service {
 
     public void getIDInfor(boolean isNeedFingerprinter);
 
-//    public void startCirculationRead(int interval);
+    //    public void startCirculationRead(int interval);
     public String parseReturnState(int state);
 }
