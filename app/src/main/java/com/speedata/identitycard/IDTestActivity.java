@@ -117,7 +117,7 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
         @Override
         public void run() {
 
-            iid2Service.getIDInfor(checkBoxFinger.isChecked());
+            iid2Service.getIDInfor(checkBoxFinger.isChecked(),true);
         }
     }
 
@@ -261,7 +261,7 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
     private IID2Service iid2Service;
 
     private void testID() {
-        iid2Service.getIDInfor(checkBoxFinger.isChecked());
+        iid2Service.getIDInfor(checkBoxFinger.isChecked(),true);
     }
 
     private void initID() {
