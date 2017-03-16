@@ -18,8 +18,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.SurfaceView;
@@ -135,7 +133,7 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
                 IDInfor idInfor = parseIDInfor.parseIDInfor(data, false);
                 if (idInfor != null) {
                     if (idInfor.isSuccess()) {
-                        tvIDInfor.setText("姓名:" + idInfor.getName()+ "\n身份证号：" + idInfor.getNum() + "\n性别：" + idInfor.getSex() +
+                        tvIDInfor.setText("姓名:" + idInfor.getName() + "\n身份证号：" + idInfor.getNum() + "\n性别：" + idInfor.getSex() +
                                 "\n民族：" + idInfor.getNation() + "\n住址:" +
                                 idInfor.getAddress() + "\n出生：" + idInfor.getYear() + "年" + idInfor
                                 .getMonth() + "月" + idInfor.getDay() + "日" + "\n有效期限：" + idInfor
@@ -217,7 +215,7 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
                     timer = new Timer();
                 }
                 if (b) {
-                    timer.schedule(new readIDTask(), 1000, 1000);
+                    timer.schedule(new readIDTask(), 20, 3000);
                 } else {
                     timer.cancel();
                     timer = null;
@@ -268,16 +266,15 @@ public class IDTestActivity extends AppCompatActivity implements View.OnClickLis
         iid2Service = IDManager.getInstance();
         try {
             boolean result = iid2Service.initDev(this, new IDReadCallBack() {
-                        @Override
-                        public void callBack(IDInfor infor) {
-                            Message message = new Message();
-                            message.obj = infor;
-                            handler.sendMessage(message);
-                        }
-                    }, SerialPort.SERIAL_TTYMT2, 115200, DeviceControl.PowerType.MAIN_AND_EXPAND
-                    , 88, 6);
-//                    , 94);
-            tvInfor.setText("s:MT2 b:115200 p:88 6");
+
+                @Override
+                public void callBack(IDInfor infor) {
+                    Message message = new Message();
+                    message.obj = infor;
+                    handler.sendMessage(message);
+                }
+            });
+            tvInfor.setText("s:MT1 b:115200 p:106");
             if (!result) {
                 new AlertDialog.Builder(this).setCancelable(false).setMessage("二代证模块初始化失败")
                         .setPositiveButton("确定", new DialogInterface.OnClickListener() {
