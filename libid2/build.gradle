@@ -31,7 +31,7 @@ def siteUrl = 'https://github.com/EchoXBR/speedata' // 项目的主页
 def gitUrl = 'https://github.com/EchoXBR/speedata.git' // Git仓库的url
 //group = "com.speedata.id" //一般填你唯一的包名
 group = "com.speedata" //一般填你唯一的包名
-version = "2.4"
+version = "2.4.2"
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -123,8 +123,7 @@ dependencies {
     //    compile project(path: ':libutils')
     //    compile files('libs/SystemProperties.jar')
     compile files('libs/HS_CVR100U.jar')
-    provided 'com.speedata:deivice:1.2'
-//    compile project(":device")
+    provided 'com.speedata:deivice:1.4.4'
     compile 'com.google.code.gson:gson:2.8.0'
 }
 

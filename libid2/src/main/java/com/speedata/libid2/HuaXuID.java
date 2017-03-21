@@ -4,10 +4,12 @@ import android.content.Context;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 
-import com.google.gson.Gson;
+import com.speedata.libutils.ConfigUtils;
+import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import static com.speedata.libid2.ParseIDInfor.READ_CARD_FAILED;
 import static com.speedata.libid2.ParseIDInfor.READ_CARD_NOT_SPOT;
@@ -38,11 +40,15 @@ public class HuaXuID implements IID2Service {
     private static final int READ_LEN_WITHOUT_FINGER = 1295;
     //    int read_len_with_finger = 1295 + 1024;
     private static final int READ_NORMAL = 1024;
-    private static final byte[] CMD_FIND_CARD = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte) 0x96, 0x69, 0x00, 0x03, 0x20, 0x01, 0x22};
-    private static final byte[] CMD_CHOOSE_CARD = {(byte) 0xAA, (byte) 0xAA, (byte) 0xAA, (byte) 0x96, 0x69, 0x00, 0x03, 0x20, 0x02, 0x21};
-    private static final byte[] CMD_READ_CARD = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte) 0x96, 0x69,
+    private static final byte[] CMD_FIND_CARD = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte)
+            0x96, 0x69, 0x00, 0x03, 0x20, 0x01, 0x22};
+    private static final byte[] CMD_CHOOSE_CARD = {(byte) 0xAA, (byte) 0xAA, (byte) 0xAA, (byte)
+            0x96, 0x69, 0x00, 0x03, 0x20, 0x02, 0x21};
+    private static final byte[] CMD_READ_CARD = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte)
+            0x96, 0x69,
             0x00, 0x03, 0x30, 0x01, 0x32};
-    private static final byte[] CMD_READ_CARD_WITH_FINGER = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte)
+    private static final byte[] CMD_READ_CARD_WITH_FINGER = {(byte) 0xaa, (byte) 0xaa, (byte)
+            0xaa, (byte)
             0x96, 0x69,
             0x00, 0x03, 0x30, 0x10, 0x23};
 
@@ -72,30 +78,20 @@ public class HuaXuID implements IID2Service {
     @Override
     public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
 
-
-        Config mConfig = null;
-        int[] intArray = new int[0];
+        ReadBean mConfig = ConfigUtils.readConfig(context);
+        ReadBean.Id2Bean id2Bean = mConfig.getId2();
         parseIDInfor = new ParseIDInfor(context);
         this.mContext = context;
         this.callBack = callBack;
-        boolean fileExists = FileUtils.fileExists();
-        if (fileExists) {
-            mConfig = new Gson().fromJson(FileUtils.readTxtFile(), Config.class);
-            intArray = new int[mConfig.getId2().getGpio().size()];
-            for (int i = 0; i < mConfig.getId2().getGpio().size(); i++) {
-                intArray[i] = mConfig.getId2().getGpio().get(i);
-            }
+        List<Integer> gpio1 = id2Bean.getGpio();
+        int[] gpio = new int[gpio1.size()];
+        for (int i = 0; i < gpio.length; i++) {
+            gpio[i] = gpio1.get(i);
         }
-        int[] gpio = fileExists ? intArray : DeviceType.getGpio();
-        String serialport = fileExists ? mConfig.getId2().getSerialPort() : DeviceType.getSerialPort();
-        int braut = fileExists ? mConfig.getId2().getBraut() : 115200;
-        DeviceControl.PowerType powerType = fileExists ? mConfig.getId2().getPowerType().equals("MAIN") ? DeviceControl.PowerType.MAIN
-                : DeviceControl.PowerType.MAIN_AND_EXPAND : DeviceType.getPowerType();
-
-        deviceControl = new DeviceControl(powerType, gpio);
+        deviceControl = new DeviceControl(id2Bean.getPowerType(), gpio);
         deviceControl.PowerOnDevice();
         mIDDev = new SerialPort();
-        mIDDev.OpenSerial(serialport, braut);
+        mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
         return searchCard() != STATUE_SERIAL_NULL;
     }
@@ -192,7 +188,8 @@ public class HuaXuID implements IID2Service {
     private byte[] sendReadCmd(boolean isNeedFingerprinter) throws UnsupportedEncodingException {
         mIDDev.clearportbuf(fd);
         if (isNeedFingerprinter) {
-//            mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(READ_CARD_WITH_FINGER));
+//            mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes
+// (READ_CARD_WITH_FINGER));
             mIDDev.WriteSerialByte(fd, CMD_READ_CARD_WITH_FINGER);
         } else {
 //            mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(READ_CARD));
