@@ -93,8 +93,23 @@ public class HuaXuID implements IID2Service {
         mIDDev = new SerialPort();
         mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
+//        SystemClock.sleep(delay);
+        int count = 0;
+
+        while (searchCard() == STATUE_READ_NULL && count < 100) {
+            count++;
+            deviceControl.PowerOnDevice();
+        }
         return searchCard() != STATUE_READ_NULL;
     }
+
+//    private int delay = 100;
+//
+//    @Override
+//    public boolean initDev(Context context, IDReadCallBack callBack, int delay) throws IOException {
+//        this.delay = delay;
+//        return initDev(context, callBack);
+//    }
 
 
     @Override

@@ -25,6 +25,7 @@ public interface IID2Service {
 
 
     boolean initDev(Context context, IDReadCallBack callBack) throws IOException;
+//    boolean initDev(Context context, IDReadCallBack callBack,int delay) throws IOException;
 
     public void releaseDev() throws IOException;
 

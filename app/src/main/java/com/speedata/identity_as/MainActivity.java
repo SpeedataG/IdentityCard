@@ -1,6 +1,7 @@
 package com.speedata.identity_as;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -102,36 +103,52 @@ public class MainActivity extends AppCompatActivity {
 
     private void initID() {
         iid2Service = IDManager.getInstance();
-        try {
-            boolean result = iid2Service.initDev(this, new IDReadCallBack() {
-                @Override
-                public void callBack(IDInfor infor) {
-                    Message message = new Message();
-                    message.obj = infor;
-                    handler.sendMessage(message);
-                }
-            });
+        final ProgressDialog progressDialog=new ProgressDialog(this);
+        progressDialog.setMessage("正在初始化");
+        progressDialog.show();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final boolean result = iid2Service.initDev(MainActivity.this, new
+                            IDReadCallBack() {
+                                @Override
+                                public void callBack(IDInfor infor) {
+                                    Message message = new Message();
+                                    message.obj = infor;
+                                    handler.sendMessage(message);
+                                }
+                            });
 
-//            tvInfor.setText(String.format("s:%s b:115200 p:%s",
-//                    DeviceType.getSerialPort().substring(DeviceType.getSerialPort().length() - 6,
-//                            DeviceType.getSerialPort().length()),
-//                    Arrays.toString(DeviceType.getGpio()).replace("[", "").replace("]", "")));
-            if (!result) {
-                new AlertDialog.Builder(this).setCancelable(false).setMessage("二代证模块初始化失败")
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressDialog.dismiss();
+                            if (!result) {
+                                new AlertDialog.Builder(MainActivity.this).setCancelable(false)
+                                        .setMessage("二代证模块初始化失败")
+                                        .setPositiveButton("确定", new DialogInterface
+                                                .OnClickListener() {
 
-
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                btnGet.setEnabled(false);
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface,
+                                                                int i) {
+                                                btnGet.setEnabled(false);
+                                                finish();
+                                            }
+                                        }).show();
+                            } else {
+                                showToast("初始化成功");
                             }
-                        }).show();
-            } else {
-                showToast("初始化成功");
+                        }
+                    });
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        }).start();
+
     }
 
 
@@ -191,8 +208,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         try {
-            if (iid2Service != null)
-                iid2Service.releaseDev();
+            iid2Service.releaseDev();
         } catch (IOException e) {
             e.printStackTrace();
         }
