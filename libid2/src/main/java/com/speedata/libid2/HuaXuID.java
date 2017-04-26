@@ -93,7 +93,7 @@ public class HuaXuID implements IID2Service {
         mIDDev = new SerialPort();
         mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
-        return searchCard() != STATUE_SERIAL_NULL;
+        return searchCard() != STATUE_READ_NULL;
     }
 
 

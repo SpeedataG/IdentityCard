@@ -7,3 +7,6 @@
 /build
 /captures
 .externalNativeBuild
+/libid2/local.properties
+/libid2/gradlew
+/libid2/gradlew.bat
