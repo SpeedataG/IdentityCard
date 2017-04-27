@@ -1,6 +1,7 @@
 package com.speedata.libid2;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 
@@ -78,6 +79,8 @@ public class HuaXuID implements IID2Service {
     @Override
     public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
 
+        Long start = System
+                .currentTimeMillis();
         ReadBean mConfig = ConfigUtils.readConfig(context);
         ReadBean.Id2Bean id2Bean = mConfig.getId2();
         parseIDInfor = new ParseIDInfor(context);
@@ -90,23 +93,32 @@ public class HuaXuID implements IID2Service {
         }
         deviceControl = new DeviceControl(id2Bean.getPowerType(), gpio);
         deviceControl.PowerOnDevice();
+        SystemClock.sleep(500);
         mIDDev = new SerialPort();
         mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
 //        SystemClock.sleep(delay);
         int count = 0;
-
-        while (searchCard() == STATUE_READ_NULL && count < 100) {
+        //最多尝试读10次串口  每次最多100ms  寻卡失败耗时1s
+        while (searchCard() == STATUE_READ_NULL && count < 3) {
             count++;
+            deviceControl.PowerOffDevice();
+            SystemClock.sleep(1000 * 2);
             deviceControl.PowerOnDevice();
+            SystemClock.sleep(1000 * 1);
         }
+//        System.out.println("===count=" + count);
+        long finish = System
+                .currentTimeMillis();
+        System.out.println("===count=" + count + "  cost time=" + (finish - start));
         return searchCard() != STATUE_READ_NULL;
     }
 
 //    private int delay = 100;
 //
 //    @Override
-//    public boolean initDev(Context context, IDReadCallBack callBack, int delay) throws IOException {
+//    public boolean initDev(Context context, IDReadCallBack callBack, int delay) throws
+// IOException {
 //        this.delay = delay;
 //        return initDev(context, callBack);
 //    }
