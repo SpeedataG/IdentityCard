@@ -15,9 +15,8 @@ public class IDFileUtils {
     public static boolean isExit() {
         File files = new File("/sdcard/wltlib");
 
-        if (!files.exists()) {
-            return true;
-        } else return false;
+        return files.exists();
+
     }
 
     public static void copyfile(String fileDirPath, String fileName, int id, Context mContext) {

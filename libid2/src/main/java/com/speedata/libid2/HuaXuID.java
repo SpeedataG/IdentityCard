@@ -6,6 +6,7 @@ import android.serialport.DeviceControl;
 import android.serialport.SerialPort;
 
 import com.speedata.libutils.ConfigUtils;
+import com.speedata.libutils.MyLogger;
 import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
@@ -100,23 +101,35 @@ public class HuaXuID implements IID2Service {
 //        SystemClock.sleep(delay);
         int count = 0;
         //最多尝试读10次串口  每次最多100ms  寻卡失败耗时1s
-        while (searchCard() == STATUE_READ_NULL && count < 3) {
-            count++;
-            deviceControl.PowerOffDevice();
-            SystemClock.sleep(1000 * 2);
-            deviceControl.PowerOnDevice();
-            SystemClock.sleep(1000 * 1);
+        if (judge()) {
+            long finish = System
+                    .currentTimeMillis();
+            System.out.println("===count=" + count + "  cost time=" + (finish - start) + " first time ok");
+            return true;
+        } else {
+            while (!judge() && count < 3) {
+                count++;
+                deviceControl.PowerOffDevice();
+                SystemClock.sleep(1000 * 2);
+                deviceControl.PowerOnDevice();
+                SystemClock.sleep(1000 * 1);
+                System.out.println("===retry==count=" + count);
+            }
         }
-//        System.out.println("===count=" + count);
+
         long finish = System
                 .currentTimeMillis();
         System.out.println("===count=" + count + "  cost time=" + (finish - start));
-        return searchCard() != STATUE_READ_NULL;
+        return judge();
     }
 
 //    private int delay = 100;
 //
 //    @Override
+
+    public HuaXuID() {
+        super();
+    }
 //    public boolean initDev(Context context, IDReadCallBack callBack, int delay) throws
 // IOException {
 //        this.delay = delay;
@@ -130,11 +143,32 @@ public class HuaXuID implements IID2Service {
         deviceControl.PowerOffDevice();
     }
 
+    /**
+     * 发送数据并判断数据，最终来判断模块初始化是否成功
+     *
+     * @return
+     */
+    public boolean judge() {
+        mIDDev.WriteSerialByte(fd, CMD_FIND_CARD);
+        try {
+            byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
+            if (bytes != null && bytes.length > 6 && (byte) bytes[0] == (byte) 0xaa && (byte) bytes[1] == (byte) 0xaa) {
+                return true;
+            } else {
+                return false;
+            }
+
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     @Override
     public int searchCard() {
 //        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(FIND_CARD));
         mIDDev.WriteSerialByte(fd, CMD_FIND_CARD);
+        logger.d("read---search");
         try {
             byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
             if (bytes == null) {
@@ -154,6 +188,7 @@ public class HuaXuID implements IID2Service {
     public int selectCard() {
 //        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(CHOOSE_CARD));
         mIDDev.WriteSerialByte(fd, CMD_CHOOSE_CARD);
+        logger.d("read---select");
         try {
             byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
             if (bytes == null) {
@@ -259,46 +294,53 @@ public class HuaXuID implements IID2Service {
     }
 
 
+    private MyLogger logger = MyLogger.jLog();
+    byte[] lock = new byte[0];
+
     private void readCard() {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 //寻卡成功之后才执行选卡和读卡
-                IDInfor idInfor;
+                synchronized (lock) {
+                    IDInfor idInfor;
 
-                if (searchCard() != STATUE_OK_SEARCH) {
-                    idInfor = new IDInfor();
-                    idInfor.setSuccess(false);
-                    idInfor.setErrorMsg(mContext.getString(R.string.states7));
-                    callBack.callBack(idInfor);
-                    return;
-                }
-
-                if (selectCard() != STATUE_OK) {
-                    idInfor = new IDInfor();
-                    idInfor.setSuccess(false);
-                    idInfor.setErrorMsg(mContext.getString(R.string.states4));
-                    callBack.callBack(idInfor);
-                    return;
-                }
-
-                mIDDev.clearportbuf(fd);
-                idInfor = readCard(isNeedFingerprinter);
-                if (idInfor != null) {
-                    if (!idInfor.isSuccess()) {
-                        String errorMsg = parseReturnState(parseIDInfor.currentStatue);
-                        idInfor.setErrorMsg(errorMsg);
+                    if (searchCard() != STATUE_OK_SEARCH) {
+                        idInfor = new IDInfor();
+                        idInfor.setSuccess(false);
+                        idInfor.setErrorMsg(mContext.getString(R.string.states7));
                         callBack.callBack(idInfor);
-                    } else {
-                        idInfor.setSuccess(true);
+                        logger.d("read---" + mContext.getString(R.string.states7));
+                        return;
+                    }
+
+                    if (selectCard() != STATUE_OK) {
+                        idInfor = new IDInfor();
+                        idInfor.setSuccess(false);
+                        idInfor.setErrorMsg(mContext.getString(R.string.states4));
+                        logger.d("read---" + mContext.getString(R.string.states4));
                         callBack.callBack(idInfor);
+                        return;
+                    }
+
+                    mIDDev.clearportbuf(fd);
+                    idInfor = readCard(isNeedFingerprinter);
+                    if (idInfor != null) {
+                        if (!idInfor.isSuccess()) {
+                            String errorMsg = parseReturnState(parseIDInfor.currentStatue);
+                            idInfor.setErrorMsg(errorMsg);
+                            callBack.callBack(idInfor);
+                        } else {
+                            idInfor.setSuccess(true);
+                            callBack.callBack(idInfor);
+                        }
                     }
                 }
-
 
             }
         });
         thread.start();
+
     }
 
 
