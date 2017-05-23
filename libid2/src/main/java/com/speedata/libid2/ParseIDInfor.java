@@ -182,28 +182,28 @@ public class ParseIDInfor {
             idInfor.setQianFa("EncodingException");
             e.printStackTrace();
         }
-        idInfor.setYear(byteArrayToAscii(idyear));
-        idInfor.setMonth(byteArrayToAscii(idmouth));
-        idInfor.setDay(byteArrayToAscii(idday));
-        idInfor.setNum(byteArrayToAscii(idnum));
+        idInfor.setYear(byteArrayToAscii(idyear).trim().replace("\0",""));
+        idInfor.setMonth(byteArrayToAscii(idmouth).trim().replace("\0",""));
+        idInfor.setDay(byteArrayToAscii(idday).trim().replace("\0",""));
+        idInfor.setNum(byteArrayToAscii(idnum).trim().replace("\0",""));
         if (idjiezhiyear[0] >= '0' && idjiezhiyear[0] <= '9') {
-            idInfor.setStartYear(byteArrayToAscii(idqishiyear));
-            idInfor.setStartMonth(byteArrayToAscii(idqishimouth));
-            idInfor.setStartDay(byteArrayToAscii(idqishiday));
-            idInfor.setEndYear(byteArrayToAscii(idjiezhiyear));
-            idInfor.setEndMonth(byteArrayToAscii(idjiezhimouth));
-            idInfor.setEndDay(byteArrayToAscii(idjiezhiday));
-            idInfor.setDeadLine(byteArrayToAscii(idqishiyear) + "." +
-                    byteArrayToAscii(idqishimouth) + "." +
-                    byteArrayToAscii(idqishiday) + "-" + byteArrayToAscii
-                    (idjiezhiyear) + "." + byteArrayToAscii(idjiezhimouth)
-                    + "." + byteArrayToAscii(idjiezhiday));
+            idInfor.setStartYear(byteArrayToAscii(idqishiyear).trim().replace("\0",""));
+            idInfor.setStartMonth(byteArrayToAscii(idqishimouth).trim().replace("\0",""));
+            idInfor.setStartDay(byteArrayToAscii(idqishiday).trim().replace("\0",""));
+            idInfor.setEndYear(byteArrayToAscii(idjiezhiyear).trim().replace("\0",""));
+            idInfor.setEndMonth(byteArrayToAscii(idjiezhimouth).trim().replace("\0",""));
+            idInfor.setEndDay(byteArrayToAscii(idjiezhiday).trim().replace("\0",""));
+            idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0","") + "." +
+                    byteArrayToAscii(idqishimouth).trim().replace("\0","") + "." +
+                    byteArrayToAscii(idqishiday).trim().replace("\0","") + "-" + byteArrayToAscii
+                    (idjiezhiyear).trim().replace("\0","") + "." + byteArrayToAscii(idjiezhimouth).trim().replace("\0","")
+                    + "." + byteArrayToAscii(idjiezhiday).trim().replace("\0",""));
         } else {
             try {
                 String sjiezhi = new String(idjiezhiall, "UTF-16LE");
-                idInfor.setDeadLine(byteArrayToAscii(idqishiyear) + "." +
-                        byteArrayToAscii(idqishimouth) + "." +
-                        byteArrayToAscii(idqishiday) + "-" + sjiezhi);
+                idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0","") + "." +
+                        byteArrayToAscii(idqishimouth).trim().replace("\0","") + "." +
+                        byteArrayToAscii(idqishiday).trim().replace("\0","") + "-" + sjiezhi);
             } catch (UnsupportedEncodingException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

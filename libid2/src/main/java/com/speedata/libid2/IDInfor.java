@@ -2,6 +2,8 @@ package com.speedata.libid2;
 
 import android.graphics.Bitmap;
 
+import java.util.Arrays;
+
 /**
  * Created by brxu on 2016/12/15.
  * 身份信息
@@ -196,5 +198,32 @@ public class IDInfor {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    @Override
+    public String toString() {
+        return "IDInfor{" +
+                "name='" + name + '\'' +
+                ", sex='" + sex + '\'' +
+                ", nation='" + nation + '\'' +
+                ", year='" + year + '\'' +
+                ", month='" + month + '\'' +
+                ", day='" + day + '\'' +
+                ", address='" + address + '\'' +
+                ", num='" + num + '\'' +
+                ", QianFa='" + QianFa + '\'' +
+                ", startYear='" + startYear + '\'' +
+                ", startMonth='" + startMonth + '\'' +
+                ", startDay='" + startDay + '\'' +
+                ", endYear='" + endYear + '\'' +
+                ", endMonth='" + endMonth + '\'' +
+                ", endDay='" + endDay + '\'' +
+                ", deadLine='" + deadLine + '\'' +
+                ", bmps=" + bmps +
+                ", fingerprStringer=" + Arrays.toString(fingerprStringer) +
+                ", isSuccess=" + isSuccess +
+                ", errorMsg='" + errorMsg + '\'' +
+                ", withFinger=" + withFinger +
+                '}';
     }
 }

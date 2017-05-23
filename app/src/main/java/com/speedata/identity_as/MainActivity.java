@@ -175,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
                         + idInfor1.getAddress() + "\n出生：" + idInfor1.getYear() + "年" + idInfor1
                         .getMonth() + "月" + idInfor1.getDay() + "日" + "\n有效期限：" + idInfor1
                         .getDeadLine());
+                System.out.println("id:"+idInfor1.toString());
                 Bitmap bmps = idInfor1.getBmps();
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
