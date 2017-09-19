@@ -139,8 +139,10 @@ public class HuaXuID implements IID2Service {
 
     @Override
     public void releaseDev() throws IOException {
-        mIDDev.CloseSerial(fd);
-        deviceControl.PowerOffDevice();
+        if (mIDDev!=null&&deviceControl!=null) {
+            mIDDev.CloseSerial(fd);
+            deviceControl.PowerOffDevice();
+        }
     }
 
     /**
