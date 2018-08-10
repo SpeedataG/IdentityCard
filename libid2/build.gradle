@@ -4,12 +4,11 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    compileSdkVersion 27
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 25
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -31,7 +30,7 @@ def siteUrl = 'https://github.com/EchoXBR/speedata' // 项目的主页
 def gitUrl = 'https://github.com/EchoXBR/speedata.git' // Git仓库的url
 //group = "com.speedata.id" //一般填你唯一的包名
 group = "com.speedata" //一般填你唯一的包名
-version = "2.5.4"
+version = "2.5.6"
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters

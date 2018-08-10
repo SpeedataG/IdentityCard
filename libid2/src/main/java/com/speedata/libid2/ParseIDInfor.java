@@ -150,7 +150,7 @@ public class ParseIDInfor {
 
         try {
             String mssg = new String(idname, "UTF-16LE");
-            idInfor.setName(mssg.substring(0, 4));
+            idInfor.setName(mssg.replaceAll(" ",""));
         } catch (UnsupportedEncodingException e) {
             idInfor.setName("EncodingException");
             e.printStackTrace();

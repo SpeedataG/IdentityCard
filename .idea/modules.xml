@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/IdentityCard.iml" filepath="$PROJECT_DIR$/IdentityCard.iml" />
-      <module fileurl="file://$PROJECT_DIR$/IdentityCard.iml" filepath="$PROJECT_DIR$/IdentityCard.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/libid2/libid2.iml" filepath="$PROJECT_DIR$/libid2/libid2.iml" />
     </modules>
