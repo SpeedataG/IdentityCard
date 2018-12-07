@@ -3,17 +3,14 @@ package com.speedata.libid2;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.SystemClock;
+import android.util.Log;
 
-import com.cvr.device.CVRApi;
 import com.speedata.libid2.utils.DataConversionUtils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+
+import cn.ywho.api.decode.DecodeWlt;
 
 import static com.speedata.libid2.Nation.codeAndMinzu;
 import static com.speedata.libid2.utils.DataConversionUtils.byteArrayToAscii;
@@ -25,16 +22,9 @@ import static com.speedata.libid2.utils.DataConversionUtils.byteArrayToAscii;
 public class ParseIDInfor {
 
     private Context mContext;
-//    private IDReadCallBack callBack;
-
-    //    public ParseIDInfor(IDReadCallBack callBack, Context mContext) {
-//        this.mContext = mContext;
-//        this.callBack = callBack;
-//    }
     public ParseIDInfor(Context mContext) {
         this.mContext = mContext;
     }
-
     public static final int STATUE_ERROR_HEAD = 1;
     public static final int STATUE_ERROR_CHECK = 2;
     public static final int STATUE_ERROR_LEN = 3;
@@ -81,8 +71,9 @@ public class ParseIDInfor {
     }
 
     public IDInfor parseIDInfor(byte[] revbuf, boolean isNeedFinger) {
-        if (revbuf.length < 1024)
+        if (revbuf.length < 1024) {
             return null;
+        }
         IDInfor idInfor = new IDInfor();
         idInfor.setSuccess(true);
         byte[] idname = new byte[30];
@@ -101,7 +92,7 @@ public class ParseIDInfor {
         byte[] idqishiday = new byte[4];
         byte[] idjiezhiday = new byte[4];
         byte[] idjiezhiall = new byte[16];
-        byte[] idimg = new byte[1024];
+        byte[] idimg = new byte[1024];//照片
         byte[] finger = new byte[1024];
         int start_parse;
         if (isNeedFinger) {
@@ -114,6 +105,8 @@ public class ParseIDInfor {
                 idInfor.setWithFinger(true);
                 idInfor.setFingerprStringer(finger);
             }
+            int iFingerSize = revbuf[14] << 8 + revbuf[15];
+
         } else {
             start_parse = 14;
         }
@@ -146,11 +139,13 @@ public class ParseIDInfor {
             idInfor.setSex("女");
         } else if (btoi(a[0]) == '9') {
             idInfor.setSex("未说明");
+        } else {
+            idInfor.setSex("未定义");
         }
 
         try {
             String mssg = new String(idname, "UTF-16LE");
-            idInfor.setName(mssg.replaceAll(" ",""));
+            idInfor.setName(mssg.replaceAll(" ", ""));
         } catch (UnsupportedEncodingException e) {
             idInfor.setName("EncodingException");
             e.printStackTrace();
@@ -158,9 +153,11 @@ public class ParseIDInfor {
 
         byte b[] = new byte[2];
         byte c[] = byteArrayToAscii(idminzu).getBytes();
+        Log.i("stw", "parseIDInfor: " + DataConversionUtils.byteArrayToString(c));
         b[0] = c[0];
         b[1] = c[2];
         for (String[] aCodeAndMinzu : codeAndMinzu) {
+            SystemClock.sleep(50);
             if (byteArrayToAscii(b).substring(0, 2).equals
                     (aCodeAndMinzu[0])) {
                 idInfor.setNation(aCodeAndMinzu[1]);
@@ -182,83 +179,43 @@ public class ParseIDInfor {
             idInfor.setQianFa("EncodingException");
             e.printStackTrace();
         }
-        idInfor.setYear(byteArrayToAscii(idyear).trim().replace("\0",""));
-        idInfor.setMonth(byteArrayToAscii(idmouth).trim().replace("\0",""));
-        idInfor.setDay(byteArrayToAscii(idday).trim().replace("\0",""));
-        idInfor.setNum(byteArrayToAscii(idnum).trim().replace("\0",""));
+        idInfor.setYear(byteArrayToAscii(idyear).trim().replace("\0", ""));
+        idInfor.setMonth(byteArrayToAscii(idmouth).trim().replace("\0", ""));
+        idInfor.setDay(byteArrayToAscii(idday).trim().replace("\0", ""));
+        idInfor.setNum(byteArrayToAscii(idnum).trim().replace("\0", ""));
         if (idjiezhiyear[0] >= '0' && idjiezhiyear[0] <= '9') {
-            idInfor.setStartYear(byteArrayToAscii(idqishiyear).trim().replace("\0",""));
-            idInfor.setStartMonth(byteArrayToAscii(idqishimouth).trim().replace("\0",""));
-            idInfor.setStartDay(byteArrayToAscii(idqishiday).trim().replace("\0",""));
-            idInfor.setEndYear(byteArrayToAscii(idjiezhiyear).trim().replace("\0",""));
-            idInfor.setEndMonth(byteArrayToAscii(idjiezhimouth).trim().replace("\0",""));
-            idInfor.setEndDay(byteArrayToAscii(idjiezhiday).trim().replace("\0",""));
-            idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0","") + "." +
-                    byteArrayToAscii(idqishimouth).trim().replace("\0","") + "." +
-                    byteArrayToAscii(idqishiday).trim().replace("\0","") + "-" + byteArrayToAscii
-                    (idjiezhiyear).trim().replace("\0","") + "." + byteArrayToAscii(idjiezhimouth).trim().replace("\0","")
-                    + "." + byteArrayToAscii(idjiezhiday).trim().replace("\0",""));
+            idInfor.setStartYear(byteArrayToAscii(idqishiyear).trim().replace("\0", ""));
+            idInfor.setStartMonth(byteArrayToAscii(idqishimouth).trim().replace("\0", ""));
+            idInfor.setStartDay(byteArrayToAscii(idqishiday).trim().replace("\0", ""));
+            idInfor.setEndYear(byteArrayToAscii(idjiezhiyear).trim().replace("\0", ""));
+            idInfor.setEndMonth(byteArrayToAscii(idjiezhimouth).trim().replace("\0", ""));
+            idInfor.setEndDay(byteArrayToAscii(idjiezhiday).trim().replace("\0", ""));
+            idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0", "") + "." +
+                    byteArrayToAscii(idqishimouth).trim().replace("\0", "") + "." +
+                    byteArrayToAscii(idqishiday).trim().replace("\0", "") + "-" + byteArrayToAscii
+                    (idjiezhiyear).trim().replace("\0", "") + "." + byteArrayToAscii(idjiezhimouth).trim().replace("\0", "")
+                    + "." + byteArrayToAscii(idjiezhiday).trim().replace("\0", ""));
         } else {
             try {
                 String sjiezhi = new String(idjiezhiall, "UTF-16LE");
-                idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0","") + "." +
-                        byteArrayToAscii(idqishimouth).trim().replace("\0","") + "." +
-                        byteArrayToAscii(idqishiday).trim().replace("\0","") + "-" + sjiezhi);
+                idInfor.setDeadLine(byteArrayToAscii(idqishiyear).trim().replace("\0", "") + "." +
+                        byteArrayToAscii(idqishimouth).trim().replace("\0", "") + "." +
+                        byteArrayToAscii(idqishiday).trim().replace("\0", "") + "-" + sjiezhi);
             } catch (UnsupportedEncodingException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
         try {
+            //照片
             System.arraycopy(revbuf, 256 + start_parse, idimg, 0, 1024);
+            byte[] bmp = new byte[14 + 40 + 308 * 126];
+            DecodeWlt.hxgc_Wlt2Bmp(idimg, bmp, 708);
+            Bitmap m_bitmapPicture = BitmapFactory.decodeByteArray(bmp, 0, bmp.length);
+            idInfor.setBmps(m_bitmapPicture);
         } catch (ArrayIndexOutOfBoundsException e) {
             e.printStackTrace();
-            return null;
         }
-
-
-        byte[] bmp = new byte[14 + 40 + 308 * 126];
-        //判断SD卡中是否有解码库文件 不存在需要cp过去
-        if (!IDFileUtils.isExit()) {
-            System.out.println();
-            IDFileUtils.copyfile("/sdcard/wltlib", "base.dat", R.raw.base, mContext);
-            IDFileUtils.copyfile("/sdcard/wltlib", "license.lic", R.raw.license, mContext);
-        }
-        //非主线程  需要执行prepare
-//        if (Looper.myLooper() == Looper.getMainLooper()) {
-//            Looper.prepare();
-//        }
-        CVRApi api;// = new CVRApi(new Handler());
-        try {
-            api = new CVRApi(new Handler());
-        } catch (Exception e) {
-            Looper.prepare();
-            api = new CVRApi(new Handler());
-        }
-        //授权目录
-        String absolutePath = Environment.getExternalStorageDirectory()
-                .getAbsolutePath() + "/wltlib";
-
-        int ret = api.Unpack(absolutePath, idimg, bmp);// 照片解码
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(absolutePath
-                    + "/zp.bmp");
-            Bitmap bmps = BitmapFactory.decodeStream(fis);
-            idInfor.setBmps(bmps);
-            try {
-                fis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            IDFileUtils.copyfile("/sdcard/wltlib", "base.dat", R.raw.base, mContext);
-            IDFileUtils.copyfile("/sdcard/wltlib", "license.lic", R.raw.license, mContext);
-        }
-//        currentStatue = STATUE_READ_OK;
-//        callBack.callBack(idInfor);
-//        logger.d("callback OK");
         return idInfor;
     }
 
@@ -275,8 +232,9 @@ public class ParseIDInfor {
 
         int res = 100;
         int real_len = len - 6;
-        if (real_len <= 0)
+        if (real_len <= 0) {
             return STATUE_ERROR_LEN;
+        }
         byte[] xorbuf = new byte[real_len];
 
         if ((btoi(buf[0]) != 0xaa) || (btoi(buf[1]) != 0xaa) || (btoi(buf[2]) != 0xaa) || (btoi

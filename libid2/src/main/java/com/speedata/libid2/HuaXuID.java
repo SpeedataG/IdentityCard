@@ -230,9 +230,9 @@ public class HuaXuID implements IID2Service {
             } else {
                 IDInfor idInfor;
                 idInfor = parseIDInfor.parseIDInfor(bytes, isNeedFingerprinter);
-                if (idInfor != null)
+                if (idInfor != null) {
                     idInfor.setSuccess(true);
-                else {
+                } else {
                     idInfor = new IDInfor();
                     idInfor.setErrorMsg("解析错误");
                     idInfor.setSuccess(false);

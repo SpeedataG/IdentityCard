@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.serialport.DeviceControl;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -24,6 +25,7 @@ import com.speedata.libid2.IDReadCallBack;
 import com.speedata.libid2.IID2Service;
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.ReadBean;
+
 
 import java.io.IOException;
 import java.util.List;
@@ -103,13 +105,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void initID() {
         iid2Service = IDManager.getInstance();
-        final ProgressDialog progressDialog=new ProgressDialog(this);
+        final ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("正在初始化");
         progressDialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+//                    final boolean result = iid2Service.initDev(MainActivity.this, new IDReadCallBack() {
+//                        @Override
+//                        public void callBack(IDInfor infor) {
+//                            Message message = new Message();
+//                            message.obj = infor;
+//                            handler.sendMessage(message);
+//                        }
+//                    }, "/dev/ttyMT0", 115200, DeviceControl.PowerType.MAIN_AND_EXPAND, 85,3);
                     final boolean result = iid2Service.initDev(MainActivity.this, new
                             IDReadCallBack() {
                                 @Override
@@ -175,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                         + idInfor1.getAddress() + "\n出生：" + idInfor1.getYear() + "年" + idInfor1
                         .getMonth() + "月" + idInfor1.getDay() + "日" + "\n有效期限：" + idInfor1
                         .getDeadLine());
-                System.out.println("id:"+idInfor1.toString());
+                System.out.println("id:" + idInfor1.toString());
                 Bitmap bmps = idInfor1.getBmps();
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
