@@ -2,11 +2,12 @@ package com.speedata.libid2;
 
 import android.content.Context;
 import android.os.SystemClock;
-import android.serialport.DeviceControl;
-import android.serialport.SerialPort;
+import android.serialport.DeviceControlSpd;
+import android.serialport.SerialPortSpd;
 
+
+import com.speedata.libid2.utils.MyLogger;
 import com.speedata.libutils.ConfigUtils;
-import com.speedata.libutils.MyLogger;
 import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ import static com.speedata.libid2.ParseIDInfor.STATUE_UNSUPPORTEDENCODINGEXCEPTI
  */
 
 public class HuaXuID implements IID2Service {
-    private SerialPort mIDDev;
+    private SerialPortSpd mIDDev;
     private int fd;
     private static final String FIND_CARD = "aaaaaa96690003200122";
     private static final String CHOOSE_CARD = "aaaaaa96690003200221";
@@ -57,21 +58,21 @@ public class HuaXuID implements IID2Service {
     private Context mContext;
     private IDReadCallBack callBack;
     private ParseIDInfor parseIDInfor;
-    private DeviceControl deviceControl;
+    private DeviceControlSpd deviceControl;
     private boolean isNeedFingerprinter;
 
     @Override
     public boolean initDev(Context mContext, IDReadCallBack callBack, String serialport, int braut,
-                           DeviceControl.PowerType power_type,
+                           DeviceControlSpd.PowerType power_type,
                            int... gpio) throws
             IOException {
 
         parseIDInfor = new ParseIDInfor(mContext);
         this.mContext = mContext;
         this.callBack = callBack;
-        deviceControl = new DeviceControl(power_type, gpio);
+        deviceControl = new DeviceControlSpd(power_type, gpio);
         deviceControl.PowerOnDevice();
-        mIDDev = new SerialPort();
+        mIDDev = new SerialPortSpd();
         mIDDev.OpenSerial(serialport, braut);
         fd = mIDDev.getFd();
         return searchCard() != STATUE_SERIAL_NULL;
@@ -92,10 +93,10 @@ public class HuaXuID implements IID2Service {
         for (int i = 0; i < gpio.length; i++) {
             gpio[i] = gpio1.get(i);
         }
-        deviceControl = new DeviceControl(id2Bean.getPowerType(), gpio);
+        deviceControl = new DeviceControlSpd(id2Bean.getPowerType(), gpio);
         deviceControl.PowerOnDevice();
         SystemClock.sleep(500);
-        mIDDev = new SerialPort();
+        mIDDev = new SerialPortSpd();
         mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
 //        SystemClock.sleep(delay);

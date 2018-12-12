@@ -1,7 +1,7 @@
 package com.speedata.libid2;
 
 import android.content.Context;
-import android.serialport.DeviceControl;
+import android.serialport.DeviceControlSpd;
 
 import java.io.IOException;
 
@@ -20,7 +20,7 @@ public interface IID2Service {
      * @param gpio       上电GPIO
      */
     public boolean initDev(Context mContext, IDReadCallBack callBack, String serialport, int braut,
-                           DeviceControl.PowerType power_type,
+                           DeviceControlSpd.PowerType power_type,
                            int... gpio) throws IOException;
 
 

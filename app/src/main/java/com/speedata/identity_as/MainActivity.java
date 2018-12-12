@@ -8,7 +8,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.serialport.DeviceControl;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,12 +22,8 @@ import com.speedata.libid2.IDInfor;
 import com.speedata.libid2.IDManager;
 import com.speedata.libid2.IDReadCallBack;
 import com.speedata.libid2.IID2Service;
-import com.speedata.libutils.ConfigUtils;
-import com.speedata.libutils.ReadBean;
-
 
 import java.io.IOException;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private TextView tvIDInfor;
@@ -48,19 +43,19 @@ public class MainActivity extends AppCompatActivity {
         PlaySoundUtils.initSoundPool(this);
         initUI();
         initID();
-        boolean isExit = ConfigUtils.isConfigFileExists();
-        if (isExit)
-            tvConfig.setText("定制配置：\n");
-        else
-            tvConfig.setText("标准配置：\n");
-        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
-        String gpio = "";
-        List<Integer> gpio1 = pasm.getGpio();
-        for (Integer s : gpio1) {
-            gpio += s + ",";
-        }
-        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-                pasm.getPowerType() + " GPIO:" + gpio);
+//        boolean isExit = ConfigUtils.isConfigFileExists();
+//        if (isExit)
+//            tvConfig.setText("定制配置：\n");
+//        else
+//            tvConfig.setText("标准配置：\n");
+//        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
+//        String gpio = "";
+//        List<Integer> gpio1 = pasm.getGpio();
+//        for (Integer s : gpio1) {
+//            gpio += s + ",";
+//        }
+//        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
+//                pasm.getPowerType() + " GPIO:" + gpio);
     }
 
 
