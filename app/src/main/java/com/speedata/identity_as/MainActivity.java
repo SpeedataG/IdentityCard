@@ -185,23 +185,24 @@ public class MainActivity extends AppCompatActivity {
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
             } else {
-                if (!isShow)
+                if (!isShow) {
                     tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()));
+                }
             }
         }
     };
 
     @SuppressWarnings("unused")
     private Bitmap ShowFingerBitmap(byte[] image, int width, int height) {
-        if (width == 0) return null;
-        if (height == 0) return null;
+        if (width == 0) { return null; }
+        if (height == 0) { return null; }
 
         int[] RGBbits = new int[width * height];
 //        viewFinger.invalidate();
         for (int i = 0; i < width * height; i++) {
             int v;
-            if (image != null) v = image[i] & 0xff;
-            else v = 0;
+            if (image != null) { v = image[i] & 0xff; }
+            else { v = 0; }
             RGBbits[i] = Color.rgb(v, v, v);
         }
         return Bitmap.createBitmap(RGBbits, width, height, Bitmap.Config.RGB_565);

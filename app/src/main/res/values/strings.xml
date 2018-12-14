@@ -2,4 +2,7 @@
     <string name="app_name">Identity_AS</string>
     <string name="need_finger">指纹</string>
     <string name="states_select_ok">指纹</string>
+
+    <drawable name="clr_normal">#ffffff</drawable>
+    <drawable name="clr_pressed">#a44100</drawable>
 </resources>

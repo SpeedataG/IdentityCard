@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".HfActivity">
+
+    <LinearLayout
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CDC9A5"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#CDC9A5"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="8"
+                android:gravity="center"
+                android:text="   非接卡操作"
+                android:textSize="20dp" />
+
+            <Button
+
+                android:id="@+id/back_btn"
+                android:layout_width="0dp"
+                android:layout_height="25dp"
+                android:layout_gravity="center"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:background="#CDC9A5"
+                android:text="退出"
+                android:textSize="15dp" />
+
+
+        </LinearLayout>
+
+        <EditText
+            android:layout_margin="16dp"
+            android:id="@+id/displaywindow_et"
+            android:layout_width="fill_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:background="#ffffff"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:gravity="top"
+            android:hint="[显示窗口]\n注意输入的指令为16进制数指令,按钮变色时指令在运行中,此时请勿点击其他按钮以免影响程序执行效率"
+            android:isScrollContainer="true"
+            android:scrollbarStyle="insideOverlay" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#CDC9A5"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_et"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:layout_margin="16dp"
+                android:layout_weight="4"
+                android:background="@drawable/shape"
+                android:gravity="center"
+                android:hint="[指令框]输入内容仅限于16进制数指令."
+                android:textSize="14dp" />
+
+            <Button
+                android:id="@+id/sure_btn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/login_button_selector"
+                android:text="发送" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#CDC9A5"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/noncard_onoroff_btn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/login_button_selector"
+                android:text="非接卡寻卡" />
+
+            <Button
+                android:id="@+id/noncard_random_btn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/login_button_selector"
+                android:text="非接卡随机数" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#CDC9A5"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/clearwindow_btn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/login_button_selector"
+                android:text="清空显示窗口" />
+
+            <Button
+                android:id="@+id/safecode_btn"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:background="@drawable/login_button_selector"
+                android:text="安全模块号" />
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
