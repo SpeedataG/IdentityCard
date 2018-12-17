@@ -5,13 +5,20 @@ import android.content.Context;
 import java.io.IOException;
 
 /**
- * @author xuyan
+ * @author xuyan  ID2读非接卡接口
  */
 public interface IHFService {
 
+    /**
+     *
+     * @param context    入参context
+     * @param callBack   用于返回结果
+     * @return           是否初始化成功
+     * @throws IOException
+     */
     boolean initDev(Context context, IDReadCallBack callBack) throws IOException;
 
-    void releaseDev() throws IOException;
+    void releaseDev();
 
     byte[] readSamID();
 

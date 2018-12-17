@@ -1,7 +1,7 @@
 package com.speedata.libid2;
 
 /**
- * @author xuyan
+ * @author xuyan 高频卡manager
  */
 public class HFManager {
     private static IHFService ihfService;

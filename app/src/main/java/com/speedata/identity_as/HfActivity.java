@@ -19,10 +19,7 @@ import com.speedata.identity_as.utils.ToastUtils;
 import com.speedata.libid2.HFManager;
 import com.speedata.libid2.IHFService;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @author xuyan  华旭的二代证读非接卡部分
@@ -41,46 +38,12 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hf);
-        creatrFile();
-        PlaySoundUtils.initSoundPool(this);
         initView();
+
+        PlaySoundUtils.initSoundPool(this);
         initDev();
     }
 
-    private void creatrFile() {
-        copyfile("/sdcard/wltlib", "base.dat", R.raw.base);
-        copyfile("/sdcard/wltlib", "license.lic", R.raw.license);
-    }
-
-    private void copyfile(String fileDirPath, String fileName, int id) {
-        // 文件路径
-        String filePath = fileDirPath + "/" + fileName;
-        try {
-            File files = new File("/sdcard/wltlib");
-            if (!files.exists()) {
-                files.mkdirs();
-            }
-            // 文件夹存在，则将apk中raw文件夹中的须要的文档拷贝到该文件夹下
-            File file = new File(filePath);
-            // 文件不存在
-            if (!file.exists()) {
-                // 通过raw得到数据资源
-                InputStream is = getResources().openRawResource(id);
-                FileOutputStream fs = new FileOutputStream(file);
-                byte[] buffer = new byte[1024];
-                // 循环写出
-                int count = 0;
-                while ((count = is.read(buffer)) > 0) {
-                    fs.write(buffer, 0, count);
-                }
-                // 关闭流
-                fs.close();
-                is.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private void initView() {
         //输入法管理
@@ -178,11 +141,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
 
     @Override
     protected void onDestroy() {
-        try {
-            ihfService.releaseDev();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ihfService.releaseDev();
         super.onDestroy();
     }
 
@@ -191,11 +150,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
         // 返回
         if (v == btnBack) {
             // 退出读卡线程
-            try {
-                ihfService.releaseDev();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            ihfService.releaseDev();
             finish();
             // 发送指令
         } else if (v == btnSure) {

@@ -44,9 +44,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
-/**
- * @author xuyan
- */
 public class ShellExe {
 
     private static final String TAG = "EM/shellexe";
@@ -145,9 +142,8 @@ public class ShellExe {
                 InputStreamReader isr = new InputStreamReader(is);
                 BufferedReader br = new BufferedReader(isr);
                 String line = null;
-                while ((line = br.readLine()) != null) {
+                while ((line = br.readLine()) != null)
                     System.out.println(type + ">" + line);
-                }
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }

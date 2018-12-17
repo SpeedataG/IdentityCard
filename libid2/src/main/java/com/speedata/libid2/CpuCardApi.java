@@ -1,8 +1,6 @@
 package com.speedata.libid2;
 
 import android.content.Context;
-import android.serialport.DeviceControlSpd;
-import android.serialport.SerialPortSpd;
 import android.util.Log;
 
 import com.speedata.libid2.utils.DataConversionUtils;
@@ -20,7 +18,7 @@ import android_serialport_api.SerialPort;
 
 
 /**
- * @author xuyan
+ * @author xuyan  高频卡API
  */
 public class CpuCardApi implements IHFService {
     // 初始化
@@ -50,6 +48,34 @@ public class CpuCardApi implements IHFService {
 
     public CpuCardApi() {
         super();
+    }
+
+
+    /**
+     * 1.初始化模块，包括设备上电，打开串口操作
+     */
+    @Override
+    public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
+
+        ReadBean mConfig = ConfigUtils.readConfig(context);
+        ReadBean.Id2Bean id2Bean = mConfig.getId2();
+
+        List<Integer> gpio1 = id2Bean.getGpio();
+        int[] gpio = new int[gpio1.size()];
+        for (int i = 0; i < gpio.length; i++) {
+            gpio[i] = gpio1.get(i);
+        }
+
+        //if (openSerialPort("/dev/ttyMT1", id2Bean.getBraut()) != 0) {
+        if (openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut()) != 0) {
+            Log.d(TAG, "===openSerialPort===false===");
+            Log.d(TAG, "===id2Bean.getSerialPort()===" + id2Bean.getSerialPort() + "===id2Bean.getBraut()===" + id2Bean.getBraut());
+            return false;
+        }
+
+        int gp = gpioPower();
+        Log.d(TAG, "===gpioPower===" + gp);
+        return true;
     }
 
     /**
@@ -88,7 +114,7 @@ public class CpuCardApi implements IHFService {
 
 
     /**
-     *  4.发送标准指令 内部实现自动打包成华旭二代证模块接收的指令格式
+     * 4.发送标准指令 内部实现自动打包成华旭二代证模块接收的指令格式
      */
     public byte[] execCmd(byte[] _bysCmd) {
         shibie = 2;
@@ -96,6 +122,16 @@ public class CpuCardApi implements IHFService {
         _bysCmd = execdabaoCmd(_bysCmd);
         execCompleteCmd(_bysCmd);
         return execmingling;
+    }
+
+
+    /**
+     * 5.释放模块，包括关闭串口，设备下电
+     */
+    @Override
+    public void releaseDev() {
+        closeSerialPort();
+        gpioPowerOff();
     }
 
 
@@ -160,20 +196,17 @@ public class CpuCardApi implements IHFService {
     /**
      * (输入输出)标准指令打包成华旭二代证模块接收的指令格式
      */
-    public byte[] execdabaoCmd(byte[] _bysCmd) {
-        byte[] a = DataConversionUtils.execCmd(_bysCmd);//
-        return a;
+    private byte[] execdabaoCmd(byte[] _bysCmd) {
+        return DataConversionUtils.execCmd(_bysCmd);
     }
 
 
     /**
-     *  转换string为需要的标准命令
+     * 转换string为需要的标准命令
      */
     private byte[] geshizhuanhuan(String strResp) {
 
-        byte[] s = DataConversionUtils.hexStringToByteArray(strResp);
-
-        return s;
+        return DataConversionUtils.hexStringToByteArray(strResp);
     }
 
 
@@ -203,8 +236,8 @@ public class CpuCardApi implements IHFService {
      * 将数据转换为16进制形式字符串
      */
     private String bytes2Hexstring(final byte[] buffer, final int size) {
-        String dataString = new String();
-        String tempString = new String();
+        String dataString = "";
+        String tempString = "";
 
         int i = 0;
 
@@ -225,14 +258,11 @@ public class CpuCardApi implements IHFService {
      * 让while循环线程休眠的时间
      */
     private void MySleep(long lWaitStep) {
-
         try {
             Thread.sleep(lWaitStep);
         } catch (InterruptedException e) {
-
             e.printStackTrace();
         }
-
     }
 
 
@@ -379,8 +409,7 @@ public class CpuCardApi implements IHFService {
         //长度短的反馈是错误信息
         if (strResp.length() == 24) {
             //反馈错误
-            String daan = wrongBack(strResp);
-            return daan;
+            return wrongBack(strResp);
         } else {//得到结果
             return quchu3(strResp);
         }
@@ -451,8 +480,7 @@ public class CpuCardApi implements IHFService {
     private String strToShort2(String strResp) {
         //长度短的反馈是需要解析的
         if (strResp.length() == 24) {
-            String daan = wrongBack2(strResp);
-            return daan;
+            return wrongBack2(strResp);
         } else {//得到结果
             return quchu3(strResp);
         }
@@ -664,54 +692,6 @@ public class CpuCardApi implements IHFService {
     }
 
 
-    private Context mContext;
-    private IDReadCallBack callBack;
-    private ParseIDInfor parseIDInfor;
-    private DeviceControlSpd deviceControl;
-    private boolean isNeedFingerprinter;
-    private SerialPortSpd mIDDev;
-    private int fd;
-    private static final int READ_NORMAL = 1024;
-    private static final byte[] CMD_FIND_CARD = {(byte) 0xaa, (byte) 0xaa, (byte) 0xaa, (byte)
-            0x96, 0x69, 0x00, 0x03, 0x20, 0x01, 0x22};
-
-
-    /**
-     *  1.初始化模块，包括设备上电，打开串口操作
-     */
-    @Override
-    public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
-
-        Long start = System
-                .currentTimeMillis();
-        ReadBean mConfig = ConfigUtils.readConfig(context);
-        ReadBean.Id2Bean id2Bean = mConfig.getId2();
-        parseIDInfor = new ParseIDInfor(context);
-        this.mContext = context;
-        this.callBack = callBack;
-        List<Integer> gpio1 = id2Bean.getGpio();
-        int[] gpio = new int[gpio1.size()];
-        for (int i = 0; i < gpio.length; i++) {
-            gpio[i] = gpio1.get(i);
-        }
-
-        openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut());
-
-        gpioPower();
-
-        return true;
-    }
-
-
-    /**
-     *  5.释放模块，包括关闭串口，设备下电
-     */
-    @Override
-    public void releaseDev() throws IOException {
-        closeSerialPort();
-        gpioPowerOff();
-    }
-
     // 打开串口
     private int openSerialPort(String path, int baudrate) {
         if (m_SerialPort == null) {
@@ -724,6 +704,9 @@ public class CpuCardApi implements IHFService {
                 e.printStackTrace();
                 return -1;
             } catch (IOException e) {
+                e.printStackTrace();
+                return -1;
+            } catch (Exception e) {
                 e.printStackTrace();
                 return -1;
             }
@@ -743,22 +726,17 @@ public class CpuCardApi implements IHFService {
     //GPIO上电
     private int gpioPower() {
 
-        if(m_bIsPowerOn)
-        {
+        if (m_bIsPowerOn) {
             return 0;
         }
         int iResult = -1;
-        String[] cmdx = new String[]{ "/system/bin/sh", "-c", "echo 1 > sys/HxReaderID_apk/hxreaderid" };
-        try
-        {
+        String[] cmdx = new String[]{"/system/bin/sh", "-c", "echo 1 > sys/HxReaderID_apk/hxreaderid"};
+        try {
             iResult = ShellExe.execCommand(cmdx);
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        if(0 == iResult)
-        {
+        if (0 == iResult) {
             m_bIsPowerOn = true;
         }
         return iResult;
@@ -766,24 +744,19 @@ public class CpuCardApi implements IHFService {
 
 
     //GPIO下电
-    private int gpioPowerOff() {
+    private void gpioPowerOff() {
 
-        if(!m_bIsPowerOn)
-        {
-            return 0;
+        if (!m_bIsPowerOn) {
+            return;
         }
         int iResult = -1;
-        String[] cmdx = new String[]{ "/system/bin/sh", "-c", "echo 0 > sys/HxReaderID_apk/hxreaderid" };
-        try
-        {
+        String[] cmdx = new String[]{"/system/bin/sh", "-c", "echo 0 > sys/HxReaderID_apk/hxreaderid"};
+        try {
             iResult = ShellExe.execCommand(cmdx);
-        }
-        catch(IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         m_bIsPowerOn = false;
-        return iResult;
     }
 
 }
