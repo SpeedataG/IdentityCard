@@ -9,12 +9,14 @@ import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.speedata.identity_as.utils.ProgressUtils;
 import com.speedata.identity_as.utils.ToastUtils;
 import com.speedata.libid2.HFManager;
 import com.speedata.libid2.IHFService;
@@ -33,7 +35,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
     protected InputMethodManager m_imm = null;
     //API等
     private IHFService ihfService;
-
+    private static String TAG = "function_DEV";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,6 +143,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
 
     @Override
     protected void onDestroy() {
+        ProgressUtils.dismissProgressDialog();
         ihfService.releaseDev();
         super.onDestroy();
     }
@@ -152,31 +155,62 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
             // 退出读卡线程
             ihfService.releaseDev();
             finish();
-            // 发送指令
         } else if (v == btnSure) {
             String str = m_CmdEdit.getText().toString();
+            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             int q = ihfService.execfasongCmd(str);
+            ProgressUtils.dismissProgressDialog();
             if (q == -1) {
                 m_RespView.append("输入有问题\n");
             } else if (q == 0) {
-                m_RespView.append(ihfService.getResult());
+                m_RespView.append(ihfService.getResult() + "\n");
             }
             // 清空显示窗口
         } else if (v == btnClearWindow) {
             m_RespView.setText(null);
             // 安全模块号
         } else if (v == btnSafecode) {
+            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.readSamID();
+            ProgressUtils.dismissProgressDialog();
             m_RespView.append(ihfService.getSafeResult());
             // 非接卡寻卡
         } else if (v == btnNonOn) {
             //非接卡寻卡
+            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.nCSearch();
-            m_RespView.append(ihfService.getResult());
+            ProgressUtils.dismissProgressDialog();
+            String all = ihfService.getResult();
+            Log.d(TAG, "all:" + all);
+            m_RespView.append( "寻卡:\n");
+            if (all.startsWith("提示")) {
+                m_RespView.append(all + "\n");
+            } else {
+                String card = all.substring(2, 4);
+                Log.d(TAG, "card:" + card);
+                int icard = Integer.parseInt(card, 16);
+                Log.d(TAG, "icard:" + icard);
+                int cardEnd = 4 + icard * 2;
+                String cardId = all.substring(4, cardEnd);
+                Log.d(TAG, "cardId:" + cardId);
+                m_RespView.append("卡号:" + cardId + "\n");
+                String read = all.substring(cardEnd, cardEnd + 2);
+                Log.d(TAG, "read:" + read);
+                int iread = Integer.parseInt(read, 16);
+                Log.d(TAG, "iread:" + iread);
+                if (iread != 0) {
+                    String mRead = all.substring(cardEnd + 2, cardEnd + 2 + iread * 2);
+                    Log.d(TAG, "mRead:" + mRead);
+                    m_RespView.append("读卡:" + mRead + "\n");
+                }
+
+            }
             // 非接卡随机数
         } else if (v == btnNonRandom) {
+            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.random();
-            m_RespView.append(ihfService.getResult());
+            ProgressUtils.dismissProgressDialog();
+            m_RespView.append(ihfService.getResult() + "\n");
         }
     }
 }

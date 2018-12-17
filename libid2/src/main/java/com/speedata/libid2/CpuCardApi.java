@@ -66,8 +66,8 @@ public class CpuCardApi implements IHFService {
             gpio[i] = gpio1.get(i);
         }
 
-        //if (openSerialPort("/dev/ttyMT1", id2Bean.getBraut()) != 0) {
-        if (openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut()) != 0) {
+        if (openSerialPort("/dev/ttyMT1", id2Bean.getBraut()) != 0) {
+        //if (openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut()) != 0) {
             Log.d(TAG, "===openSerialPort===false===");
             Log.d(TAG, "===id2Bean.getSerialPort()===" + id2Bean.getSerialPort() + "===id2Bean.getBraut()===" + id2Bean.getBraut());
             return false;
@@ -391,10 +391,10 @@ public class CpuCardApi implements IHFService {
             }
             //如果是寻卡
         } else if (shibie == 1) {
-            strResp = "寻卡:\n" + strToShort2(strResp);
+            strResp = strToShort2(strResp);
         }
 
-        str = strResp + "\n";
+        str = strResp;
 
         Log.i(TAG, "str = " + str);
 
@@ -423,43 +423,43 @@ public class CpuCardApi implements IHFService {
         String a2 = "";
         switch (a1) {
             case "33303036":
-                a2 = "3006,操作非接触式用户卡数据无回应";
+                a2 = "提示:3006,操作非接触式用户卡数据无回应";
                 break;
             case "31303031":
-                a2 = "1001,不支持接触式用户卡";
+                a2 = "提示:1001,不支持接触式用户卡";
                 break;
             case "31303032":
-                a2 = "1002,接触式用户卡未插到位";
+                a2 = "提示:1002,接触式用户卡未插到位";
                 break;
             case "31303034":
-                a2 = "1004,接触式用户卡未上电";
+                a2 = "提示:1004,接触式用户卡未上电";
                 break;
             case "31303036":
-                a2 = "1006,操作接触式用户卡数据无回应";
+                a2 = "提示:1006,操作接触式用户卡数据无回应";
                 break;
             case "31303037":
-                a2 = "1007,操作接触式用户卡数据出现错误";
+                a2 = "提示:1007,操作接触式用户卡数据出现错误";
                 break;
             case "32303031":
-                a2 = "2001,不支持PSAM卡";
+                a2 = "提示:2001,不支持PSAM卡";
                 break;
             case "32303034":
-                a2 = "2004,PSAM卡未上电";
+                a2 = "提示:2004,PSAM卡未上电";
                 break;
             case "32303036":
-                a2 = "2006,操作PSAM卡数据无回应";
+                a2 = "提示:2006,操作PSAM卡数据无回应";
                 break;
             case "32303037":
-                a2 = "2007,操作PSAM卡数据出现错误";
+                a2 = "提示:2007,操作PSAM卡数据出现错误";
                 break;
             case "33303031":
-                a2 = "3001,不支持非接触式用户卡";
+                a2 = "提示:3001,不支持非接触式用户卡";
                 break;
             case "33303034":
-                a2 = "3004,非接触式用户卡未激活";
+                a2 = "提示:3004,非接触式用户卡未激活";
                 break;
             case "33303037":
-                a2 = "3007,操作非接触式用户卡数据出现错误";
+                a2 = "提示:3007,操作非接触式用户卡数据出现错误";
                 break;
             default:
                 //如果不是上述信息,则反馈内容
@@ -467,7 +467,7 @@ public class CpuCardApi implements IHFService {
                 for (int x = 1; x < a1.length(); x += 2) {
                     str2 = str2 + a1.substring(x, x + 1);
                 }
-                a2 = str2;
+                a2 = "提示:" + str2;
                 break;
         }
         return a2;
@@ -495,16 +495,16 @@ public class CpuCardApi implements IHFService {
         String a2 = "";
         switch (a1) {
             case "33303031":
-                a2 = "3001,不支持非接触用户卡";
+                a2 = "提示:3001,不支持非接触用户卡";
                 break;
             case "33303035":
-                a2 = "3005,非接触用户卡激活失败";
+                a2 = "提示:3005,非接触用户卡激活失败";
                 break;
             case "33303036":
-                a2 = "3006,等待卡进入感应区超时";
+                a2 = "提示:3006,等待卡进入感应区超时";
                 break;
             case "33303039":
-                a2 = "3009,有多张卡在感应区";
+                a2 = "提示:3009,有多张卡在感应区";
                 break;
             //如果不是上述信息,则反馈内容
             default:
@@ -512,7 +512,7 @@ public class CpuCardApi implements IHFService {
                 for (int x = 1; x < a1.length(); x += 2) {
                     str2 = str2 + a1.substring(x, x + 1);
                 }
-                a2 = str2;
+                a2 = "提示:" + str2;
                 break;
         }
         return a2;
@@ -546,10 +546,10 @@ public class CpuCardApi implements IHFService {
         iResult = inputCmd(_bysCmd);
         if (0 != iResult) {
             if (1 == iResult) {
-                str = "上一条指令未执行完/n";
+                str = "提示:上一条指令未执行完";
                 return;
             } else if (2 == iResult) {
-                str = "输入的指令为空/n";
+                str = "提示:输入的指令为空";
                 return;
             }
 
@@ -590,12 +590,12 @@ public class CpuCardApi implements IHFService {
     private void executeCmd() {
 
         if (0 == m_iCmdSize) {
-            str = "指令长度为0/n";
+            str = "提示:指令长度为0";
             return;
         }
 
         if (null == m_bysCmd) {
-            str = "指令为空/n";
+            str = "提示:指令为空";
             return;
         }
         Log.i(TAG, "m_bysCmd = " + DataConversionUtils.byteArrayToStringLog(m_bysCmd, m_bysCmd.length));
