@@ -16,7 +16,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.speedata.identity_as.utils.ProgressUtils;
 import com.speedata.identity_as.utils.ToastUtils;
 import com.speedata.libid2.HFManager;
 import com.speedata.libid2.IHFService;
@@ -36,6 +35,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
     //API等
     private IHFService ihfService;
     private static String TAG = "function_DEV";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -143,23 +143,20 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
 
     @Override
     protected void onDestroy() {
-        ProgressUtils.dismissProgressDialog();
         ihfService.releaseDev();
         super.onDestroy();
     }
 
     @Override
     public void onClick(View v) {
-        // 返回
+        //返回,退出读卡线程
         if (v == btnBack) {
-            // 退出读卡线程
             ihfService.releaseDev();
             finish();
+            //确定
         } else if (v == btnSure) {
             String str = m_CmdEdit.getText().toString();
-            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             int q = ihfService.execfasongCmd(str);
-            ProgressUtils.dismissProgressDialog();
             if (q == -1) {
                 m_RespView.append("输入有问题\n");
             } else if (q == 0) {
@@ -170,19 +167,14 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
             m_RespView.setText(null);
             // 安全模块号
         } else if (v == btnSafecode) {
-            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.readSamID();
-            ProgressUtils.dismissProgressDialog();
             m_RespView.append(ihfService.getSafeResult());
             // 非接卡寻卡
         } else if (v == btnNonOn) {
-            //非接卡寻卡
-            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.nCSearch();
-            ProgressUtils.dismissProgressDialog();
             String all = ihfService.getResult();
             Log.d(TAG, "all:" + all);
-            m_RespView.append( "寻卡:\n");
+            m_RespView.append("寻卡:\n");
             if (all.startsWith("提示")) {
                 m_RespView.append(all + "\n");
             } else {
@@ -207,9 +199,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
             }
             // 非接卡随机数
         } else if (v == btnNonRandom) {
-            ProgressUtils.showProgressDialog(HfActivity.this, "请稍候...");
             ihfService.random();
-            ProgressUtils.dismissProgressDialog();
             m_RespView.append(ihfService.getResult() + "\n");
         }
     }

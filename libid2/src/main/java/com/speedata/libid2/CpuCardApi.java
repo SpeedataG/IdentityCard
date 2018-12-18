@@ -66,8 +66,8 @@ public class CpuCardApi implements IHFService {
             gpio[i] = gpio1.get(i);
         }
 
-        if (openSerialPort("/dev/ttyMT1", id2Bean.getBraut()) != 0) {
-        //if (openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut()) != 0) {
+        //if (openSerialPort("/dev/ttyMT1", id2Bean.getBraut()) != 0) {
+        if (openSerialPort(id2Bean.getSerialPort(), id2Bean.getBraut()) != 0) {
             Log.d(TAG, "===openSerialPort===false===");
             Log.d(TAG, "===id2Bean.getSerialPort()===" + id2Bean.getSerialPort() + "===id2Bean.getBraut()===" + id2Bean.getBraut());
             return false;

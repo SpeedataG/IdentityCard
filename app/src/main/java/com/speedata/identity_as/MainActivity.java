@@ -3,6 +3,7 @@ package com.speedata.identity_as;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -11,6 +12,8 @@ import android.os.Message;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -29,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvIDInfor;
     private ImageView imgPic;
 
-
+    private Button mHf;
     //    private ImageView imgFinger;
     private CheckBox checkBoxFinger;
     private ToggleButton btnGet;
@@ -71,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
         tvMsg = (TextView) findViewById(R.id.tv_msg);
         tvIDInfor = (TextView) findViewById(R.id.tv_idinfor);
         imgPic = (ImageView) findViewById(R.id.img_pic);
+        mHf = findViewById(R.id.btn_hf);
+        mHf.setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, HfActivity.class));
+            finish();
+        });
         btnGet = (ToggleButton) findViewById(R.id.btn_get);
         btnGet.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -139,10 +147,12 @@ public class MainActivity extends AppCompatActivity {
                                             public void onClick(DialogInterface dialogInterface,
                                                                 int i) {
                                                 btnGet.setEnabled(false);
+                                                mHf.setVisibility(View.INVISIBLE);
                                                 finish();
                                             }
                                         }).show();
                             } else {
+                                mHf.setVisibility(View.VISIBLE);
                                 showToast("初始化成功");
                             }
                         }

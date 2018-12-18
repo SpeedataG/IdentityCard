@@ -123,5 +123,13 @@
         android:layout_gravity="center"
         android:src="@drawable/icon_logo"/>
 
+    <Button
+        android:visibility="gone"
+        android:id="@+id/btn_hf"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="ID2读非接卡（部分设备可用）"/>
+
 
 </LinearLayout>
