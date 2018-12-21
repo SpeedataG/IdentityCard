@@ -2,7 +2,6 @@ package com.speedata.identity_as;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -14,8 +13,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,7 +20,6 @@ import android.widget.ToggleButton;
 
 import com.speedata.libid2.IDInfor;
 import com.speedata.libid2.IDManager;
-import com.speedata.libid2.IDReadCallBack;
 import com.speedata.libid2.IID2Service;
 
 import java.io.IOException;
@@ -33,8 +29,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imgPic;
 
     private Button mHf;
-    //    private ImageView imgFinger;
-    private CheckBox checkBoxFinger;
     private ToggleButton btnGet;
     private TextView tvMsg;
 
@@ -46,64 +40,39 @@ public class MainActivity extends AppCompatActivity {
         PlaySoundUtils.initSoundPool(this);
         initUI();
         initID();
-//        boolean isExit = ConfigUtils.isConfigFileExists();
-//        if (isExit)
-//            tvConfig.setText("定制配置：\n");
-//        else
-//            tvConfig.setText("标准配置：\n");
-//        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
-//        String gpio = "";
-//        List<Integer> gpio1 = pasm.getGpio();
-//        for (Integer s : gpio1) {
-//            gpio += s + ",";
-//        }
-//        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-//                pasm.getPowerType() + " GPIO:" + gpio);
+
     }
 
 
-    private TextView tvConfig;
     private ImageView imageView;
     private TextView tvTime;
 
     private void initUI() {
         setContentView(R.layout.activity_main);
-        tvTime = (TextView) findViewById(R.id.tv_time);
-        imageView = (ImageView) findViewById(R.id.img_logo);
-        tvConfig = (TextView) findViewById(R.id.tv_config);
-        tvMsg = (TextView) findViewById(R.id.tv_msg);
-        tvIDInfor = (TextView) findViewById(R.id.tv_idinfor);
-        imgPic = (ImageView) findViewById(R.id.img_pic);
+        tvTime = findViewById(R.id.tv_time);
+        imageView = findViewById(R.id.img_logo);
+        tvMsg = findViewById(R.id.tv_msg);
+        tvIDInfor = findViewById(R.id.tv_idinfor);
+        imgPic = findViewById(R.id.img_pic);
         mHf = findViewById(R.id.btn_hf);
         mHf.setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, HfActivity.class));
             finish();
         });
-        btnGet = (ToggleButton) findViewById(R.id.btn_get);
-        btnGet.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                iid2Service.getIDInfor(false, b);
-                if (b) {
-                    startTime = System.currentTimeMillis();
-                    MyAnimation.showLogoAnimation(MainActivity.this, imageView);
-                } else {
-                    imageView.clearAnimation();
-                }
+        btnGet = findViewById(R.id.btn_get);
+        btnGet.setOnCheckedChangeListener((compoundButton, b) -> {
+            iid2Service.getIDInfor(false, b);
+            if (b) {
+                startTime = System.currentTimeMillis();
+                MyAnimation.showLogoAnimation(MainActivity.this, imageView);
+            } else {
+                imageView.clearAnimation();
             }
         });
 
-
-        checkBoxFinger = (CheckBox) findViewById(R.id.checkbox_wit_finger);
     }
 
     private IID2Service iid2Service;
-
-
-    private void clearUI() {
-        tvIDInfor.setText("");
-        imgPic.setImageBitmap(null);
-    }
 
 
     private void initID() {
@@ -111,79 +80,58 @@ public class MainActivity extends AppCompatActivity {
         final ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("正在初始化");
         progressDialog.show();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-//                    final boolean result = iid2Service.initDev(MainActivity.this, new IDReadCallBack() {
-//                        @Override
-//                        public void callBack(IDInfor infor) {
-//                            Message message = new Message();
-//                            message.obj = infor;
-//                            handler.sendMessage(message);
-//                        }
-//                    }, "/dev/ttyMT0", 115200, DeviceControl.PowerType.MAIN_AND_EXPAND, 85,3);
-                    final boolean result = iid2Service.initDev(MainActivity.this, new
-                            IDReadCallBack() {
-                                @Override
-                                public void callBack(IDInfor infor) {
-                                    Message message = new Message();
-                                    message.obj = infor;
-                                    handler.sendMessage(message);
-                                }
-                            });
+        new Thread(() -> {
+            try {
+                final boolean result = iid2Service.initDev(MainActivity.this, infor -> {
+                    Message message = new Message();
+                    message.obj = infor;
+                    handler.sendMessage(message);
+                });
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressDialog.dismiss();
-                            if (!result) {
-                                new AlertDialog.Builder(MainActivity.this).setCancelable(false)
-                                        .setMessage("二代证模块初始化失败")
-                                        .setPositiveButton("确定", new DialogInterface
-                                                .OnClickListener() {
+                runOnUiThread(() -> {
+                    progressDialog.dismiss();
+                    if (!result) {
+                        new AlertDialog.Builder(MainActivity.this).setCancelable(false)
+                                .setMessage("二代证模块初始化失败")
+                                .setPositiveButton("确定", (dialogInterface, i) -> {
+                                    btnGet.setEnabled(false);
+                                    mHf.setVisibility(View.INVISIBLE);
+                                    finish();
+                                }).show();
+                    } else {
+                        mHf.setVisibility(View.VISIBLE);
+                        showToast();
+                    }
+                });
 
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface,
-                                                                int i) {
-                                                btnGet.setEnabled(false);
-                                                mHf.setVisibility(View.INVISIBLE);
-                                                finish();
-                                            }
-                                        }).show();
-                            } else {
-                                mHf.setVisibility(View.VISIBLE);
-                                showToast("初始化成功");
-                            }
-                        }
-                    });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }).start();
 
     }
 
-
-    private boolean isShow = false;//成功读取过后   不显示循环读取返回错误信息
+    /**
+     *  成功读取过后   不显示循环读取返回错误信息
+     */
+    private boolean isShow = false;
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
+        @SuppressLint("SetTextI18n")
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            long left_time = System.currentTimeMillis() - startTime;
-            Log.d("Reginer", "time is: " + left_time);
+            long leftTime = System.currentTimeMillis() - startTime;
+            Log.d("Reginer", "time is: " + leftTime);
             startTime = System.currentTimeMillis();
             iid2Service.getIDInfor(false, btnGet.isChecked());
-//            clearUI();
+
             IDInfor idInfor1 = (IDInfor) msg.obj;
 
             if (idInfor1.isSuccess()) {
                 isShow = true;
                 PlaySoundUtils.play(1, 1);
-                tvTime.setText("耗时：" + left_time + "ms");
+                tvTime.setText("耗时：" + leftTime + "ms");
                 tvIDInfor.setText("姓名:" + idInfor1.getName() + "\n身份证号：" + idInfor1.getNum()
                         + "\n性别：" + idInfor1.getSex()
                         + "\n民族：" + idInfor1.getNation() + "\n住址:"
@@ -203,23 +151,23 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @SuppressWarnings("unused")
-    private Bitmap ShowFingerBitmap(byte[] image, int width, int height) {
+    private Bitmap showfingerbitmap(byte[] image, int width, int height) {
         if (width == 0) { return null; }
         if (height == 0) { return null; }
 
-        int[] RGBbits = new int[width * height];
-//        viewFinger.invalidate();
+        int[] rgbbits = new int[width * height];
+
         for (int i = 0; i < width * height; i++) {
             int v;
             if (image != null) { v = image[i] & 0xff; }
             else { v = 0; }
-            RGBbits[i] = Color.rgb(v, v, v);
+            rgbbits[i] = Color.rgb(v, v, v);
         }
-        return Bitmap.createBitmap(RGBbits, width, height, Bitmap.Config.RGB_565);
+        return Bitmap.createBitmap(rgbbits, width, height, Bitmap.Config.RGB_565);
     }
 
-    private void showToast(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+    private void showToast() {
+        Toast.makeText(this, "初始化成功", Toast.LENGTH_LONG).show();
     }
 
     @Override

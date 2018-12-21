@@ -21,32 +21,32 @@ import android_serialport_api.SerialPort;
  * @author xuyan  高频卡API
  */
 public class CpuCardApi implements IHFService {
-    // 初始化
+
     private static final String TAG = "function_DEV";
 
-    protected int m_iRecvBufSize = 1024 * 3;
-    protected SerialPort m_SerialPort = null;
-    protected InputStream m_InputStream = null;
-    protected OutputStream m_OutputStream = null;
-    protected boolean m_bIsPowerOn = false;
-    protected int m_iRecvSize = 0;
-    protected int m_iRecvOffset = 0;
-    protected byte m_bysRecvBuffer[] = new byte[m_iRecvBufSize];
-    protected int m_iCmdSize = 0;
-    protected byte m_bysCmd[] = null;
+    private int mIrecvbufsize = 1024 * 3;
+    private SerialPort mSerialport = null;
+    private InputStream mInputstream = null;
+    private OutputStream mOutputstream = null;
+    private boolean mBispoweron = false;
+    private int m_iRecvSize = 0;
+    private int mIrecvoffset = 0;
+    private byte m_bysRecvBuffer[] = new byte[mIrecvbufsize];
+    private int m_iCmdSize = 0;
+    private byte m_bysCmd[] = null;
 
     //识别是寻卡还是输入的指令
-    protected int shibie = 0;
-    protected int geshi = 0;
+    private int shibie = 0;
+    private int geshi = 0;
     //存放命令
-    protected byte[] execmingling = null;
+    private byte[] execmingling = null;
 
 
     //activity显示用的str,str2
-    public String str = "";
-    public String str2 = "";
+    private String str = "";
+    private String str2 = "";
 
-    public CpuCardApi() {
+    CpuCardApi() {
         super();
     }
 
@@ -85,14 +85,14 @@ public class CpuCardApi implements IHFService {
     public byte[] readSamID() {
         byte byscmd[] = {(byte) 0xAA, (byte) 0xAA, (byte) 0xAA, (byte) 0x96, 0x69, 0x00, 0x03, 0x12, (byte) 0xFF, (byte) 0xEE};
         try {
-            m_OutputStream.write(byscmd);
-            m_OutputStream.flush();
+            mOutputstream.write(byscmd);
+            mOutputstream.flush();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
         }
-        getCmdWholeResp(300, 100);
-        onReadSamID(m_bysRecvBuffer, m_iRecvSize);
+        getCmdWholeResp(300);
+        onReadSamID(m_bysRecvBuffer);
         return m_bysRecvBuffer;
 
     }
@@ -116,11 +116,11 @@ public class CpuCardApi implements IHFService {
     /**
      * 4.发送标准指令 内部实现自动打包成华旭二代证模块接收的指令格式
      */
-    public byte[] execCmd(byte[] _bysCmd) {
+    public byte[] execCmd(byte[] byscmd) {
         shibie = 2;
         geshi = 3;
-        _bysCmd = execdabaoCmd(_bysCmd);
-        execCompleteCmd(_bysCmd);
+        byscmd = execdabaoCmd(byscmd);
+        execCompleteCmd(byscmd);
         return execmingling;
     }
 
@@ -136,13 +136,14 @@ public class CpuCardApi implements IHFService {
 
 
     //按钮功能实现
-    //发送指令按钮
+    /**
+     *  发送指令按钮
+     */
     @Override
     public int execfasongCmd(String str) {
         shibie = 2;
-        int iStrLen = 0;
-        String strCmd01 = str;
-        iStrLen = strCmd01.length();
+        int iStrLen;
+        iStrLen = str.length();
         if (0 == iStrLen) {
             return -1;
         }
@@ -155,7 +156,7 @@ public class CpuCardApi implements IHFService {
             return -1;
         }
         // 去掉指令空格
-        String strCmd02 = strCmd01.replace(" ", "");
+        String strCmd02 = str.replace(" ", "");
 
         // 命令封装方法,把apdu封装成完成长度如把0084000008封装成
         // 0230303038333232363f3f30303834303030303038363703这样的完整命令
@@ -196,8 +197,8 @@ public class CpuCardApi implements IHFService {
     /**
      * (输入输出)标准指令打包成华旭二代证模块接收的指令格式
      */
-    private byte[] execdabaoCmd(byte[] _bysCmd) {
-        return DataConversionUtils.execCmd(_bysCmd);
+    private byte[] execdabaoCmd(byte[] byscmd) {
+        return DataConversionUtils.execCmd(byscmd);
     }
 
 
@@ -214,15 +215,14 @@ public class CpuCardApi implements IHFService {
      * 将一个4byte的数组转换成32位的int
      *
      * @param buf bytes buffer
-     * @param pos byte[]中开始转换的位置
      * @return convert result
      */
-    private long unsigned4BytesToInt(byte[] buf, int pos) {
+    private long unsigned4BytesToInt(byte[] buf) {
         int firstByte = 0;
         int secondByte = 0;
         int thirdByte = 0;
         int fourthByte = 0;
-        int index = pos;
+        int index = 0;
         firstByte = (0x000000FF & ((int) buf[index]));
         secondByte = (0x000000FF & ((int) buf[index + 1]));
         thirdByte = (0x000000FF & ((int) buf[index + 2]));
@@ -257,9 +257,9 @@ public class CpuCardApi implements IHFService {
     /**
      * 让while循环线程休眠的时间
      */
-    private void MySleep(long lWaitStep) {
+    private void mysleep() {
         try {
-            Thread.sleep(lWaitStep);
+            Thread.sleep((long) 100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -269,17 +269,17 @@ public class CpuCardApi implements IHFService {
     /**
      * 读取安全模块号
      */
-    private void onReadSamID(final byte[] bysReadResp, final int iSize) {
-        int i = 0;
-        int j = 0;
-        long lTemp = 0;
+    private void onReadSamID(final byte[] bysReadResp) {
+        int i;
+        int j;
+        long lTemp;
 
         byte SW1 = bysReadResp[7];
         byte SW2 = bysReadResp[8];
         byte SW3 = bysReadResp[9];
 
         String strCode = "";
-        String strTemp = null;
+        String strTemp;
 
         if ((0x0 != SW1) || (0x0 != SW2) || (((byte) 0x90) != SW3)) {
 
@@ -291,7 +291,7 @@ public class CpuCardApi implements IHFService {
         bysCode01A[1] = 0;
         bysCode01A[2] = bysReadResp[11];
         bysCode01A[3] = bysReadResp[10];
-        lTemp = unsigned4BytesToInt(bysCode01A, 0);
+        lTemp = unsigned4BytesToInt(bysCode01A);
         strTemp = Long.toString(lTemp);
         j = 2 - strTemp.length();
         for (i = 0; i < j; i++) {
@@ -306,7 +306,7 @@ public class CpuCardApi implements IHFService {
         bysCode01B[1] = 0;
         bysCode01B[2] = bysReadResp[13];
         bysCode01B[3] = bysReadResp[12];
-        lTemp = unsigned4BytesToInt(bysCode01B, 0);
+        lTemp = unsigned4BytesToInt(bysCode01B);
         strTemp = Long.toString(lTemp);
         j = 2 - strTemp.length();
         for (i = 0; i < j; i++) {
@@ -323,7 +323,7 @@ public class CpuCardApi implements IHFService {
         bysCode02[1] = bysReadResp[16];
         bysCode02[2] = bysReadResp[15];
         bysCode02[3] = bysReadResp[14];
-        lTemp = unsigned4BytesToInt(bysCode02, 0);
+        lTemp = unsigned4BytesToInt(bysCode02);
         strTemp = Long.toString(lTemp);
         strCode += Long.toString(lTemp);
 
@@ -336,7 +336,7 @@ public class CpuCardApi implements IHFService {
         bysCode03[1] = bysReadResp[20];
         bysCode03[2] = bysReadResp[19];
         bysCode03[3] = bysReadResp[18];
-        lTemp = unsigned4BytesToInt(bysCode03, 0);
+        lTemp = unsigned4BytesToInt(bysCode03);
         strTemp = Long.toString(lTemp);
         j = 10 - strTemp.length();
         for (i = 0; i < j; i++) {
@@ -353,7 +353,7 @@ public class CpuCardApi implements IHFService {
         bysCode04[1] = bysReadResp[24];
         bysCode04[2] = bysReadResp[23];
         bysCode04[3] = bysReadResp[22];
-        lTemp = unsigned4BytesToInt(bysCode04, 0);
+        lTemp = unsigned4BytesToInt(bysCode04);
         strTemp = Long.toString(lTemp);
         j = 10 - strTemp.length();
         for (i = 0; i < j; i++) {
@@ -541,9 +541,9 @@ public class CpuCardApi implements IHFService {
     /**
      * 执行指令,输入的指令为二代证模块识别的完整指令
      */
-    private void execCompleteCmd(byte[] _bysCmd) {
+    private void execCompleteCmd(byte[] byscmd) {
         int iResult = 0;
-        iResult = inputCmd(_bysCmd);
+        iResult = inputCmd(byscmd);
         if (0 != iResult) {
             if (1 == iResult) {
                 str = "提示:上一条指令未执行完";
@@ -565,23 +565,23 @@ public class CpuCardApi implements IHFService {
     /**
      * 分析指令是否为空以及是否有未执行完的指令
      */
-    private int inputCmd(final byte[] _bysCmd) {
+    private int inputCmd(final byte[] byscmd) {
         if (0 != m_iCmdSize) {
             //上一条指令未执行完
             return 1;
         }
 
-        if (0 == _bysCmd.length) {
+        if (0 == byscmd.length) {
             //输入了空指令
             return 2;
         }
 
-        Log.i(TAG, "_bysCmd = " + DataConversionUtils.byteArrayToStringLog(_bysCmd, _bysCmd.length));
+        Log.i(TAG, "_bysCmd = " + DataConversionUtils.byteArrayToStringLog(byscmd, byscmd.length));
 
-        m_iCmdSize = _bysCmd.length;
-        m_bysCmd = _bysCmd.clone();
+        m_iCmdSize = byscmd.length;
+        m_bysCmd = byscmd.clone();
 
-        Log.i(TAG, "_bysCmd = " + DataConversionUtils.byteArrayToStringLog(_bysCmd, _bysCmd.length));
+        Log.i(TAG, "_bysCmd = " + DataConversionUtils.byteArrayToStringLog(byscmd, byscmd.length));
         Log.i(TAG, "m_bysCmd = " + DataConversionUtils.byteArrayToStringLog(m_bysCmd, m_bysCmd.length));
         return 0;
     }
@@ -600,8 +600,8 @@ public class CpuCardApi implements IHFService {
         }
         Log.i(TAG, "m_bysCmd = " + DataConversionUtils.byteArrayToStringLog(m_bysCmd, m_bysCmd.length));
         try {//发送指令
-            m_OutputStream.write(m_bysCmd);
-            m_OutputStream.flush();
+            mOutputstream.write(m_bysCmd);
+            mOutputstream.flush();
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -609,7 +609,7 @@ public class CpuCardApi implements IHFService {
 
         Log.i(TAG, "m_iCmdSize = " + m_iCmdSize + "m_bysCmd = " + DataConversionUtils.byteArrayToStringLog(m_bysCmd, m_bysCmd.length));
         //准备接受指令
-        getCmdWholeResp(1000, 100);
+        getCmdWholeResp(1000);
 
 
         m_iCmdSize = 0;
@@ -620,28 +620,23 @@ public class CpuCardApi implements IHFService {
     /**
      * 问题出现于此方法,getCmdWholeResp得到的buffer值的帧头00是不对的,应为02
      */
-    private void getCmdWholeResp(final long lWaitTotal, final long lWaitStep) {
-        int i = 0;
+    private void getCmdWholeResp(final long lWaitTotal) {
+        int i;
         byte[] buffer = new byte[1024];
-        int size = 0;
-
-        //int iReadTimes = 0;
-
+        int size;
         long lWait = 0;
-
-        int iCanReadSize = 0;
-
+        int iCanReadSize;
         boolean bIsDataExits = true;
 
         try {
             m_iRecvSize = 0;
-            m_iRecvOffset = 0;
+            mIrecvoffset = 0;
 
             //1
             while (true) {
                 //2,读取反馈信息
                 while (true) {
-                    iCanReadSize = m_InputStream.available();
+                    iCanReadSize = mInputstream.available();
                     if (iCanReadSize > 0) {
                         break;
                     }
@@ -653,17 +648,17 @@ public class CpuCardApi implements IHFService {
                         break;
                     }
                     //延时读取信息
-                    MySleep(lWaitStep);
+                    mysleep();
 
-                    lWait += lWaitStep;
+                    lWait += (long) 100;
                 } //while(true) //2
 
                 if (!bIsDataExits) {
                     break;
                 }
 
-                size = m_InputStream.read(buffer);
-                //Log.i(TAG, "size" +  size);
+                size = mInputstream.read(buffer);
+
                 //buffer为空时,继续while
                 if (size <= 0) {
                     continue;
@@ -672,10 +667,10 @@ public class CpuCardApi implements IHFService {
                 Log.i(TAG, "buffer = " + DataConversionUtils.byteArrayToStringLog(m_bysRecvBuffer, m_bysRecvBuffer.length));
                 //把buffer取出来放到m_bysRecvBuffer
                 for (i = 1; i <= size; i++) {
-                    m_bysRecvBuffer[m_iRecvOffset + i] = buffer[i];
+                    m_bysRecvBuffer[mIrecvoffset + i] = buffer[i];
                 }
-                m_iRecvOffset += size;
-                m_iRecvSize = m_iRecvOffset;
+                mIrecvoffset += size;
+                m_iRecvSize = mIrecvoffset;
 
             } //while(true) //1
 
@@ -692,14 +687,16 @@ public class CpuCardApi implements IHFService {
     }
 
 
-    // 打开串口
+    /**
+     *    打开串口
+      */
     private int openSerialPort(String path, int baudrate) {
-        if (m_SerialPort == null) {
+        if (mSerialport == null) {
 
             try {
-                m_SerialPort = new SerialPort(new File(path), baudrate, 0);
-                m_InputStream = m_SerialPort.getInputStream();
-                m_OutputStream = m_SerialPort.getOutputStream();
+                mSerialport = new SerialPort(new File(path), baudrate, 0);
+                mInputstream = mSerialport.getInputStream();
+                mOutputstream = mSerialport.getOutputStream();
             } catch (SecurityException e) {
                 e.printStackTrace();
                 return -1;
@@ -715,18 +712,22 @@ public class CpuCardApi implements IHFService {
         return 0;
     }
 
-    // 关闭串口
+    /**
+     * 关闭串口
+      */
     private void closeSerialPort() {
-        if (m_SerialPort != null) {
-            m_SerialPort.close();
-            m_SerialPort = null;
+        if (mSerialport != null) {
+            mSerialport.close();
+            mSerialport = null;
         }
     }
 
-    //GPIO上电
+    /**
+     * GPIO上电
+     */
     private int gpioPower() {
 
-        if (m_bIsPowerOn) {
+        if (mBispoweron) {
             return 0;
         }
         int iResult = -1;
@@ -737,26 +738,28 @@ public class CpuCardApi implements IHFService {
             e.printStackTrace();
         }
         if (0 == iResult) {
-            m_bIsPowerOn = true;
+            mBispoweron = true;
         }
         return iResult;
     }
 
 
-    //GPIO下电
+    /**
+     * GPIO下电
+     */
     private void gpioPowerOff() {
 
-        if (!m_bIsPowerOn) {
+        if (!mBispoweron) {
             return;
         }
-        int iResult = -1;
+
         String[] cmdx = new String[]{"/system/bin/sh", "-c", "echo 0 > sys/HxReaderID_apk/hxreaderid"};
         try {
-            iResult = ShellExe.execCommand(cmdx);
+            ShellExe.execCommand(cmdx);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        m_bIsPowerOn = false;
+        mBispoweron = false;
     }
 
 }

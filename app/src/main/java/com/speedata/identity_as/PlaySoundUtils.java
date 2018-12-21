@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by brxu on 2017/3/21.
+ *
+ * @author brxu
+ * @date 2017/3/21
  */
 
 public class PlaySoundUtils {

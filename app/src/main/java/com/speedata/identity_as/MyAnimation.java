@@ -10,8 +10,8 @@ import android.view.animation.LinearInterpolator;
  * Created by brxu on 2017/3/21.
  */
 
-public class MyAnimation {
-    public static void showLogoAnimation(Context context, View view){
+class MyAnimation {
+    static void showLogoAnimation(Context context, View view){
         Animation operatingAnim = AnimationUtils.loadAnimation(context, R.anim.logo);
         LinearInterpolator lin = new LinearInterpolator();
         operatingAnim.setInterpolator(lin);
