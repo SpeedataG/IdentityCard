@@ -697,13 +697,7 @@ public class CpuCardApi implements IHFService {
                 mSerialport = new SerialPort(new File(path), baudrate, 0);
                 mInputstream = mSerialport.getInputStream();
                 mOutputstream = mSerialport.getOutputStream();
-            } catch (SecurityException e) {
-                e.printStackTrace();
-                return -1;
-            } catch (IOException e) {
-                e.printStackTrace();
-                return -1;
-            } catch (Exception e) {
+            }  catch (Exception e) {
                 e.printStackTrace();
                 return -1;
             }

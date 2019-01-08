@@ -1,7 +1,6 @@
 package com.speedata.identity_as;
 
 import android.annotation.SuppressLint;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,8 +18,6 @@ import android.widget.EditText;
 import com.speedata.identity_as.utils.ToastUtils;
 import com.speedata.libid2.HFManager;
 import com.speedata.libid2.IHFService;
-
-import java.io.IOException;
 
 /**
  * @author xuyan  华旭的二代证读非接卡部分
@@ -41,7 +38,6 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hf);
         initView();
-
         PlaySoundUtils.initSoundPool(this);
         initDev();
     }
@@ -89,9 +85,6 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
 
     private void initDev() {
         ihfService = HFManager.getInstance();
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("正在初始化");
-        progressDialog.show();
         new Thread(() -> {
             try {
 //
@@ -102,7 +95,7 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
                 });
 
                 runOnUiThread(() -> {
-                    progressDialog.dismiss();
+
                     if (!result) {
                         new AlertDialog.Builder(HfActivity.this).setCancelable(false)
                                 .setMessage("二代证模块初始化失败")
@@ -112,8 +105,9 @@ public class HfActivity extends AppCompatActivity implements View.OnClickListene
                     }
                 });
 
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
+
             }
         }).start();
 
