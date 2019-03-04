@@ -1,6 +1,8 @@
 package com.speedata.identity_as;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
@@ -8,8 +10,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import android.serialport.DeviceControlSpd;
 import android.util.Log;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -22,10 +23,13 @@ import com.speedata.libid2.IDInfor;
 import com.speedata.libid2.IDManager;
 import com.speedata.libid2.IDReadCallBack;
 import com.speedata.libid2.IID2Service;
+import com.speedata.libutils.ConfigUtils;
+import com.speedata.libutils.ReadBean;
 
 import java.io.IOException;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
     private TextView tvIDInfor;
     private ImageView imgPic;
 
@@ -43,19 +47,20 @@ public class MainActivity extends AppCompatActivity {
         PlaySoundUtils.initSoundPool(this);
         initUI();
         initID();
-//        boolean isExit = ConfigUtils.isConfigFileExists();
-//        if (isExit)
-//            tvConfig.setText("定制配置：\n");
-//        else
-//            tvConfig.setText("标准配置：\n");
-//        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
-//        String gpio = "";
-//        List<Integer> gpio1 = pasm.getGpio();
-//        for (Integer s : gpio1) {
-//            gpio += s + ",";
-//        }
-//        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-//                pasm.getPowerType() + " GPIO:" + gpio);
+        boolean isExit = ConfigUtils.isConfigFileExists();
+        if (isExit) {
+            tvConfig.setText("定制配置：\n");
+        } else {
+            tvConfig.setText("标准配置：\n");
+        }
+        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
+        String gpio = "";
+        List<Integer> gpio1 = pasm.getGpio();
+        for (Integer s : gpio1) {
+            gpio += s + ",";
+        }
+        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
+                pasm.getPowerType() + " GPIO:" + gpio);
     }
 
 
@@ -107,6 +112,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
+                    //sd100 id2
+//                    DeviceControlSpd deviceControlSpd = new DeviceControlSpd();
+//                    deviceControlSpd.gtPower("printer_open");
 //                    final boolean result = iid2Service.initDev(MainActivity.this, new IDReadCallBack() {
 //                        @Override
 //                        public void callBack(IDInfor infor) {
@@ -185,23 +193,31 @@ public class MainActivity extends AppCompatActivity {
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
             } else {
-                if (!isShow)
+                if (!isShow) {
                     tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()));
+                }
             }
         }
     };
 
     @SuppressWarnings("unused")
     private Bitmap ShowFingerBitmap(byte[] image, int width, int height) {
-        if (width == 0) return null;
-        if (height == 0) return null;
+        if (width == 0) {
+            return null;
+        }
+        if (height == 0) {
+            return null;
+        }
 
         int[] RGBbits = new int[width * height];
 //        viewFinger.invalidate();
         for (int i = 0; i < width * height; i++) {
             int v;
-            if (image != null) v = image[i] & 0xff;
-            else v = 0;
+            if (image != null) {
+                v = image[i] & 0xff;
+            } else {
+                v = 0;
+            }
             RGBbits[i] = Color.rgb(v, v, v);
         }
         return Bitmap.createBitmap(RGBbits, width, height, Bitmap.Config.RGB_565);

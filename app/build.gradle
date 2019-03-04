@@ -33,4 +33,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation project(':libid2')
     implementation 'com.alibaba:fastjson:1.2.54'
+    implementation 'com.github.SpeedataG:Device:1.6.4'
+
 }
