@@ -70,8 +70,10 @@ public class HuaXuID implements IID2Service {
         parseIDInfor = new ParseIDInfor(mContext);
         this.mContext = mContext;
         this.callBack = callBack;
-        deviceControl = new DeviceControlSpd(power_type, gpio);
-        deviceControl.PowerOnDevice();
+        if (power_type != null & gpio != null) {
+            deviceControl = new DeviceControlSpd(power_type, gpio);
+            deviceControl.PowerOnDevice();
+        }
         mIDDev = new SerialPortSpd();
         mIDDev.OpenSerial(serialport, braut);
         fd = mIDDev.getFd();

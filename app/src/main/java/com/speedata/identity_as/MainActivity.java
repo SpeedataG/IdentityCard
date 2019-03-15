@@ -1,18 +1,18 @@
 package com.speedata.identity_as;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.serialport.DeviceControlSpd;
+import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -25,26 +25,63 @@ import com.speedata.libid2.IDReadCallBack;
 import com.speedata.libid2.IID2Service;
 import com.speedata.libutils.ConfigUtils;
 import com.speedata.libutils.ReadBean;
+import com.speedata.utils.ProgressDialogUtils;
+import com.yanzhenjie.permission.AndPermission;
+import com.yanzhenjie.permission.PermissionListener;
+import com.yanzhenjie.permission.Rationale;
+import com.yanzhenjie.permission.RationaleListener;
 
 import java.io.IOException;
 import java.util.List;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     private TextView tvIDInfor;
     private ImageView imgPic;
 
-
-    //    private ImageView imgFinger;
-    private CheckBox checkBoxFinger;
     private ToggleButton btnGet;
     private TextView tvMsg;
 
     private long startTime;
+    private TextView tvConfig;
+    private ImageView imageView;
+    private TextView tvTime;
+    private IID2Service iid2Service;
+    @SuppressLint("HandlerLeak")
+    Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            long left_time = System.currentTimeMillis() - startTime;
+            Log.d("Reginer", "time is: " + left_time);
+            startTime = System.currentTimeMillis();
+            iid2Service.getIDInfor(false, btnGet.isChecked());
+
+            IDInfor idInfor1 = (IDInfor) msg.obj;
+
+            if (idInfor1.isSuccess()) {
+                Log.d("Reginer", "read success time is: " + left_time);
+                PlaySoundUtils.play(1, 1);
+                tvTime.setText("耗时：" + left_time + "ms");
+                tvIDInfor.setText("姓名:" + idInfor1.getName() + "\n身份证号：" + idInfor1.getNum()
+                        + "\n性别：" + idInfor1.getSex()
+                        + "\n民族：" + idInfor1.getNation() + "\n住址:"
+                        + idInfor1.getAddress() + "\n出生：" + idInfor1.getYear() + "年" + idInfor1
+                        .getMonth() + "月" + idInfor1.getDay() + "日" + "\n有效期限：" + idInfor1
+                        .getDeadLine());
+                Bitmap bmps = idInfor1.getBmps();
+                imgPic.setImageBitmap(bmps);
+                tvMsg.setText("");
+            } else {
+                tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()));
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         PlaySoundUtils.initSoundPool(this);
+        permission();
         initUI();
         initID();
         boolean isExit = ConfigUtils.isConfigFileExists();
@@ -63,11 +100,6 @@ public class MainActivity extends Activity {
                 pasm.getPowerType() + " GPIO:" + gpio);
     }
 
-
-    private TextView tvConfig;
-    private ImageView imageView;
-    private TextView tvTime;
-
     private void initUI() {
         setContentView(R.layout.activity_main);
         tvTime = (TextView) findViewById(R.id.tv_time);
@@ -82,37 +114,50 @@ public class MainActivity extends Activity {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 iid2Service.getIDInfor(false, b);
                 if (b) {
-                    startTime = System.currentTimeMillis();
                     MyAnimation.showLogoAnimation(MainActivity.this, imageView);
                 } else {
                     imageView.clearAnimation();
                 }
             }
         });
-
-
-        checkBoxFinger = (CheckBox) findViewById(R.id.checkbox_wit_finger);
     }
-
-    private IID2Service iid2Service;
-
 
     private void clearUI() {
         tvIDInfor.setText("");
         imgPic.setImageBitmap(null);
     }
 
+    private void permission() {
+        AndPermission.with(this).permission(Manifest.permission.READ_EXTERNAL_STORAGE).callback(listener).rationale(new RationaleListener() {
+            @Override
+            public void showRequestPermissionRationale(int requestCode, Rationale rationale) {
+                AndPermission.rationaleDialog(MainActivity.this, rationale).show();
+            }
+        }).start();
+    }
+
+    PermissionListener listener = new PermissionListener() {
+        @Override
+        public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
+
+        }
+
+        @Override
+        public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
+            // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
+            if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, deniedPermissions)) {
+                AndPermission.defaultSettingDialog(MainActivity.this, 300).show();
+            }
+        }
+    };
 
     private void initID() {
-        iid2Service = IDManager.getInstance();
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("正在初始化");
-        progressDialog.show();
+        ProgressDialogUtils.showProgressDialog(this, "正在初始化");
         new Thread(new Runnable() {
             @Override
             public void run() {
+                iid2Service = IDManager.getInstance();
                 try {
-                    //sd100 id2
 //                    DeviceControlSpd deviceControlSpd = new DeviceControlSpd();
 //                    deviceControlSpd.gtPower("printer_open");
 //                    final boolean result = iid2Service.initDev(MainActivity.this, new IDReadCallBack() {
@@ -122,9 +167,9 @@ public class MainActivity extends Activity {
 //                            message.obj = infor;
 //                            handler.sendMessage(message);
 //                        }
-//                    }, "/dev/ttyMT0", 115200, DeviceControl.PowerType.MAIN_AND_EXPAND, 85,3);
-                    final boolean result = iid2Service.initDev(MainActivity.this, new
-                            IDReadCallBack() {
+//                    }, "/dev/ttyHSL1", 115200, null, null);
+                    final boolean result = iid2Service.initDev(MainActivity.this
+                            , new IDReadCallBack() {
                                 @Override
                                 public void callBack(IDInfor infor) {
                                     Message message = new Message();
@@ -133,30 +178,10 @@ public class MainActivity extends Activity {
                                 }
                             });
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressDialog.dismiss();
-                            if (!result) {
-                                new AlertDialog.Builder(MainActivity.this).setCancelable(false)
-                                        .setMessage("二代证模块初始化失败")
-                                        .setPositiveButton("确定", new DialogInterface
-                                                .OnClickListener() {
-
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface,
-                                                                int i) {
-                                                btnGet.setEnabled(false);
-                                                finish();
-                                            }
-                                        }).show();
-                            } else {
-                                showToast("初始化成功");
-                            }
-                        }
-                    });
+                    showResult(result, "");
 
                 } catch (IOException e) {
+                    showResult(false, e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -164,64 +189,48 @@ public class MainActivity extends Activity {
 
     }
 
+    private void showResult(final boolean result, final String msg) {
+        runOnUiThread(new Runnable() {
+                          @Override
+                          public void run() {
+                              ProgressDialogUtils.dismissProgressDialog();
+                              if (!result) {
+                                  new AlertDialog.Builder(MainActivity.this).setCancelable(false).setMessage("二代证模块初始化失败,请前往工具中修改参数" + msg)
+                                          .setPositiveButton("确定", new DialogInterface.OnClickListener() {
 
-    private boolean isShow = false;//成功读取过后   不显示循环读取返回错误信息
-    @SuppressLint("HandlerLeak")
-    Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            long left_time = System.currentTimeMillis() - startTime;
-            Log.d("Reginer", "time is: " + left_time);
-            startTime = System.currentTimeMillis();
-            iid2Service.getIDInfor(false, btnGet.isChecked());
-//            clearUI();
-            IDInfor idInfor1 = (IDInfor) msg.obj;
 
-            if (idInfor1.isSuccess()) {
-                isShow = true;
-                PlaySoundUtils.play(1, 1);
-                tvTime.setText("耗时：" + left_time + "ms");
-                tvIDInfor.setText("姓名:" + idInfor1.getName() + "\n身份证号：" + idInfor1.getNum()
-                        + "\n性别：" + idInfor1.getSex()
-                        + "\n民族：" + idInfor1.getNation() + "\n住址:"
-                        + idInfor1.getAddress() + "\n出生：" + idInfor1.getYear() + "年" + idInfor1
-                        .getMonth() + "月" + idInfor1.getDay() + "日" + "\n有效期限：" + idInfor1
-                        .getDeadLine());
-                System.out.println("id:" + idInfor1.toString());
-                Bitmap bmps = idInfor1.getBmps();
-                imgPic.setImageBitmap(bmps);
-                tvMsg.setText("");
-            } else {
-                if (!isShow) {
-                    tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()));
-                }
-            }
-        }
-    };
+                                              @Override
+                                              public void onClick(DialogInterface dialogInterface, int i) {
+                                                  btnGet.setEnabled(false);
+                                                  openConfig();
 
-    @SuppressWarnings("unused")
-    private Bitmap ShowFingerBitmap(byte[] image, int width, int height) {
-        if (width == 0) {
-            return null;
-        }
-        if (height == 0) {
-            return null;
-        }
-
-        int[] RGBbits = new int[width * height];
-//        viewFinger.invalidate();
-        for (int i = 0; i < width * height; i++) {
-            int v;
-            if (image != null) {
-                v = image[i] & 0xff;
-            } else {
-                v = 0;
-            }
-            RGBbits[i] = Color.rgb(v, v, v);
-        }
-        return Bitmap.createBitmap(RGBbits, width, height, Bitmap.Config.RGB_565);
+                                              }
+                                          }).show();
+                              } else {
+                                  showToast("初始化成功");
+                              }
+                          }
+                      }
+        );
     }
+
+    /**
+     * 打开调试工具  修改配置
+     */
+    private void openConfig() {
+        //打开失败去下载
+        try {
+            Intent intent = new Intent();
+            intent.setAction("speedata.config");
+            startActivity(intent);
+        } catch (Exception e) {
+            //            downLoadDeviceApp();
+            new AlertDialog.Builder(MainActivity.this).setCancelable(false).setMessage("请去应用市场下载思必拓调试工具进行配置")
+                    .setPositiveButton("确定", null).show();
+        }
+
+    }
+
 
     private void showToast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -230,7 +239,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         try {
-            iid2Service.releaseDev();
+            //退出 释放二代证模块
+            if (iid2Service != null) {
+                iid2Service.releaseDev();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -22,10 +22,8 @@ android {
     }
 }
 
-
-
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar','*.aar'], dir: 'libs')
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
@@ -34,5 +32,7 @@ dependencies {
     implementation project(':libid2')
     implementation 'com.alibaba:fastjson:1.2.54'
     implementation 'com.github.SpeedataG:Device:1.6.4'
+    //6.0权限添加三方库
+    implementation 'com.yanzhenjie:permission:1.1.2'
 
 }
