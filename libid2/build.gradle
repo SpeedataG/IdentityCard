@@ -5,7 +5,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 android {
-    compileSdkVersion 22
+    compileSdkVersion 28
     buildToolsVersion '28.0.3'
     defaultConfig {
         minSdkVersion 15
@@ -13,12 +13,16 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable false
         }
     }
 
@@ -30,7 +34,7 @@ def siteUrl = 'https://github.com/EchoXBR/speedata' // 项目的主页
 def gitUrl = 'https://github.com/EchoXBR/speedata.git' // Git仓库的url
 //group = "com.speedata.id" //一般填你唯一的包名
 group = "com.speedata" //一般填你唯一的包名
-version = "2.5.9"
+version = "2.6.0"
 install {
     repositories.mavenInstaller {
         // This generates POM.xml with proper parameters
@@ -117,7 +121,7 @@ bintray {
 }
 dependencies {
     implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
-    implementation 'com.android.support:appcompat-v7:22.2.1'
+    implementation 'com.android.support:appcompat-v7:28.0.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
@@ -126,7 +130,6 @@ dependencies {
         resolutionStrategy.force 'com.android.support:support-annotations:28.0.0'
     }
     testImplementation 'junit:junit:4.12'
-    //    implementation 'com.speedata:deivice:1.6.2'
     implementation 'com.github.SpeedataG:Device:1.6.4'
     implementation 'com.google.code.gson:gson:2.8.5'
 }
