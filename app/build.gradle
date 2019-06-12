@@ -41,7 +41,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     implementation project(':libid2')
     implementation 'com.alibaba:fastjson:1.2.54'
-    implementation 'com.github.SpeedataG:Device:1.6.4'
+    implementation 'com.github.SpeedataG:Device:1.6.8'
     //6.0权限添加三方库
     implementation 'com.yanzhenjie:permission:1.1.2'
 
