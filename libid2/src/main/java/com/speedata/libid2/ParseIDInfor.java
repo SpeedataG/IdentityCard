@@ -71,7 +71,7 @@ public class ParseIDInfor {
     }
 
     public IDInfor parseIDInfor(byte[] revbuf, boolean isNeedFinger) {
-        if (revbuf.length < 1024) {
+        if (revbuf.length < 1295) {
             return null;
         }
         IDInfor idInfor = new IDInfor();
@@ -215,6 +215,7 @@ public class ParseIDInfor {
             idInfor.setBmps(m_bitmapPicture);
         } catch (ArrayIndexOutOfBoundsException e) {
             e.printStackTrace();
+            idInfor.setSuccess(false);
         }
         return idInfor;
     }

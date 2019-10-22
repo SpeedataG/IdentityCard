@@ -4,7 +4,7 @@ import android.content.Context;
 import android.os.SystemClock;
 import android.serialport.DeviceControlSpd;
 import android.serialport.SerialPortSpd;
-
+import android.util.Log;
 
 import com.speedata.libid2.utils.MyLogger;
 import com.speedata.libutils.ConfigUtils;
@@ -33,13 +33,10 @@ import static com.speedata.libid2.ParseIDInfor.STATUE_UNSUPPORTEDENCODINGEXCEPTI
  */
 
 public class HuaXuID implements IID2Service {
-    private SerialPortSpd mIDDev;
-    private int fd;
     private static final String FIND_CARD = "aaaaaa96690003200122";
     private static final String CHOOSE_CARD = "aaaaaa96690003200221";
     private static final String READ_CARD = "aaaaaa96690003300132";
     private static final String READ_CARD_WITH_FINGER = "aaaaaa96690003301023";
-
     private static final int READ_LEN_WITHOUT_FINGER = 1295;
     //    int read_len_with_finger = 1295 + 1024;
     private static final int READ_NORMAL = 1024;
@@ -54,12 +51,21 @@ public class HuaXuID implements IID2Service {
             0xaa, (byte)
             0x96, 0x69,
             0x00, 0x03, 0x30, 0x10, 0x23};
-
+    byte[] lock = new byte[0];
+    private SerialPortSpd mIDDev;
+    private int fd;
     private Context mContext;
     private IDReadCallBack callBack;
     private ParseIDInfor parseIDInfor;
     private DeviceControlSpd deviceControl;
     private boolean isNeedFingerprinter;
+    private MyLogger logger = MyLogger.jLog();
+
+
+    public HuaXuID() {
+        super();
+    }
+
 
     @Override
     public boolean initDev(Context mContext, IDReadCallBack callBack, String serialport, int braut,
@@ -74,17 +80,24 @@ public class HuaXuID implements IID2Service {
             deviceControl = new DeviceControlSpd(power_type, gpio);
             deviceControl.PowerOnDevice();
         }
+//        SystemClock.sleep(3000);
         mIDDev = new SerialPortSpd();
         mIDDev.OpenSerial(serialport, braut);
         fd = mIDDev.getFd();
-        return searchCard() != STATUE_SERIAL_NULL;
+        int count = 0;
+        while ( count < 10) {
+            if(judge()){
+                return true;
+            }else{
+                count++;
+            }
+        }
+        return false;
     }
 
     @Override
     public boolean initDev(Context context, IDReadCallBack callBack) throws IOException {
 
-        Long start = System
-                .currentTimeMillis();
         ReadBean mConfig = ConfigUtils.readConfig(context);
         ReadBean.Id2Bean id2Bean = mConfig.getId2();
         parseIDInfor = new ParseIDInfor(context);
@@ -97,54 +110,27 @@ public class HuaXuID implements IID2Service {
         }
         deviceControl = new DeviceControlSpd(id2Bean.getPowerType(), gpio);
         deviceControl.PowerOnDevice();
-        SystemClock.sleep(500);
         mIDDev = new SerialPortSpd();
         mIDDev.OpenSerial(id2Bean.getSerialPort(), id2Bean.getBraut());
         fd = mIDDev.getFd();
-//        SystemClock.sleep(delay);
         int count = 0;
-        //最多尝试读10次串口  每次最多100ms  寻卡失败耗时1s
-        if (judge()) {
-            long finish = System
-                    .currentTimeMillis();
-            System.out.println("===count=" + count + "  cost time=" + (finish - start) + " first time ok");
-            return true;
-        } else {
-            while (!judge() && count < 3) {
+        while ( count < 10) {
+            if(judge()){
+                return true;
+            }else{
                 count++;
-                deviceControl.PowerOffDevice();
-                SystemClock.sleep(1000 * 2);
-                deviceControl.PowerOnDevice();
-                SystemClock.sleep(1000 * 1);
-                System.out.println("===retry==count=" + count);
             }
         }
-
-        long finish = System
-                .currentTimeMillis();
-        System.out.println("===count=" + count + "  cost time=" + (finish - start));
-        return judge();
+        return false;
     }
-
-//    private int delay = 100;
-//
-//    @Override
-
-    public HuaXuID() {
-        super();
-    }
-//    public boolean initDev(Context context, IDReadCallBack callBack, int delay) throws
-// IOException {
-//        this.delay = delay;
-//        return initDev(context, callBack);
-//    }
-
 
     @Override
     public void releaseDev() throws IOException {
         if (mIDDev != null && deviceControl != null) {
             mIDDev.CloseSerial(fd);
             deviceControl.PowerOffDevice();
+            logger.d("====releaseDev====");
+
         }
     }
 
@@ -155,8 +141,10 @@ public class HuaXuID implements IID2Service {
      */
     public boolean judge() {
         mIDDev.WriteSerialByte(fd, CMD_FIND_CARD);
+        logger.d("====judge====");
         try {
-            byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
+            //寻卡返回最多15个字符
+            byte[] bytes = mIDDev.ReadSerial(fd, 15);
             if (bytes != null && bytes.length > 6 && (byte) bytes[0] == (byte) 0xaa && (byte) bytes[1] == (byte) 0xaa) {
                 return true;
             } else {
@@ -171,11 +159,14 @@ public class HuaXuID implements IID2Service {
 
     @Override
     public int searchCard() {
-//        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(FIND_CARD));
+        //        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(FIND_CARD));
         mIDDev.WriteSerialByte(fd, CMD_FIND_CARD);
         logger.d("read---search");
         try {
-            byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
+            //aa aa aa 96 69 00 08 00 00 9f 00 00 00 00 97 成功
+            //aa aa aa 96 69 00 04 00 00 80 84 失败
+            // 最长15个字节
+            byte[] bytes = mIDDev.ReadSerial(fd, 15);
             if (bytes == null) {
                 return STATUE_READ_NULL;
             } else {
@@ -187,15 +178,16 @@ public class HuaXuID implements IID2Service {
             return STATUE_UNSUPPORTEDENCODINGEXCEPTION;
         }
     }
-
 
     @Override
     public int selectCard() {
-//        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(CHOOSE_CARD));
+        //        mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(CHOOSE_CARD));
         mIDDev.WriteSerialByte(fd, CMD_CHOOSE_CARD);
         logger.d("read---select");
         try {
-            byte[] bytes = mIDDev.ReadSerial(fd, READ_NORMAL);
+            //aa aa aa 96 69 00 0c 00 00 90 00 00 00 00 00 00 00 00 9c
+            //            最长19个字节
+            byte[] bytes = mIDDev.ReadSerial(fd, 19);
             if (bytes == null) {
                 return STATUE_READ_NULL;
             } else {
@@ -208,7 +200,6 @@ public class HuaXuID implements IID2Service {
         }
 
     }
-
 
     @Override
     public IDInfor readCard(final boolean isNeedFingerprinter) {
@@ -248,43 +239,47 @@ public class HuaXuID implements IID2Service {
     /**
      * 发送读卡指令.
      *
-     * @param isNeedFingerprinter 是否需要指纹
+     * @param isNeedFingerprinter
+     *         是否需要指纹
+     *
      * @return byte[]
-     * @throws UnsupportedEncodingException UnsupportedEncodingException
+     *
+     * @throws UnsupportedEncodingException
+     *         UnsupportedEncodingException
      */
     private byte[] sendReadCmd(boolean isNeedFingerprinter) throws UnsupportedEncodingException {
         mIDDev.clearportbuf(fd);
         if (isNeedFingerprinter) {
-//            mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes
-// (READ_CARD_WITH_FINGER));
             mIDDev.WriteSerialByte(fd, CMD_READ_CARD_WITH_FINGER);
         } else {
-//            mIDDev.WriteSerialByte(fd, DataConversionUtils.HexString2Bytes(READ_CARD));
             mIDDev.WriteSerialByte(fd, CMD_READ_CARD);
         }
 
         byte[] bytes;
         if (!isNeedFingerprinter) {
             bytes = mIDDev.ReadSerial(fd, READ_LEN_WITHOUT_FINGER);
+            Log.d("TEST", "byte len=" + bytes.length + " this" + this);
         } else {
             byte[] temp0 = mIDDev.ReadSerial(fd, READ_LEN_WITHOUT_FINGER, false);
             byte[] temp1 = mIDDev.ReadSerial(fd, READ_NORMAL, false);
             int len1 = 0;
             int len2 = 0;
-            if (temp0 != null)
+            if (temp0 != null) {
                 len1 = temp0.length;
-            if (temp1 != null)
+            }
+            if (temp1 != null) {
                 len2 = temp1.length;
+            }
             bytes = new byte[len1 + len2];
             if (temp0 != null) {
                 System.arraycopy(temp0, 0, bytes, 0, temp0.length);
             }
-            if (temp1 != null && temp0 != null)
+            if (temp1 != null && temp0 != null) {
                 System.arraycopy(temp1, 0, bytes, temp0.length, temp1.length);
+            }
         }
         return bytes;
     }
-
 
     @Override
     public void getIDInfor(final boolean isNeedFingerprinter, boolean isLoop) {
@@ -297,10 +292,6 @@ public class HuaXuID implements IID2Service {
             }
         }
     }
-
-
-    private MyLogger logger = MyLogger.jLog();
-    byte[] lock = new byte[0];
 
     private void readCard() {
         Thread thread = new Thread(new Runnable() {
@@ -328,7 +319,7 @@ public class HuaXuID implements IID2Service {
                         return;
                     }
 
-                    mIDDev.clearportbuf(fd);
+                    //                    mIDDev.clearportbuf(fd);
                     idInfor = readCard(isNeedFingerprinter);
                     if (idInfor != null) {
                         if (!idInfor.isSuccess()) {
