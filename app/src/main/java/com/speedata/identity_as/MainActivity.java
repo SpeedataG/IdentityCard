@@ -36,19 +36,30 @@ import java.io.IOException;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    PermissionListener listener = new PermissionListener() {
+        @Override
+        public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
+
+        }
+
+        @Override
+        public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
+            // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
+            if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, deniedPermissions)) {
+                AndPermission.defaultSettingDialog(MainActivity.this, 300).show();
+            }
+        }
+    };
     private TextView tvIDInfor;
     private ImageView imgPic;
-
     private ToggleButton btnGet;
     private TextView tvMsg;
-
     private long startTime;
     private TextView tvConfig;
     private ImageView imageView;
     private TextView tvTime;
+    private TextView tvInitTime;
     private IID2Service iid2Service;
-
-
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
@@ -75,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
             } else {
-                tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()));
+                tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg())+left_time+"ms");
             }
         }
     };
@@ -105,8 +116,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
                 pasm.getPowerType() + " GPIO:" + gpio);
-//        tvConfig.append("串口:" + "ttyMT0" + "  波特率：" + "115200" + " 上电类型:" +
-//                "NEW_MAIN" + " GPIO:" + "12");
+        //        tvConfig.append("串口:" + "ttyMT0" + "  波特率：" + "115200" + " 上电类型:" +
+        //                "NEW_MAIN" + " GPIO:" + "12");
     }
 
     @Override
@@ -118,22 +129,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onStop() {
         super.onStop();
-        try {
-//            DeviceControlSpd deviceControlSpd = new DeviceControlSpd();
-//            deviceControlSpd.gtPower("printer_close");
-//            deviceControlSpd.gtPower("charge_off");
-            //退出 释放二代证模块
-            if (iid2Service != null) {
-                iid2Service.releaseDev();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     private void initUI() {
         setContentView(R.layout.activity_main);
         tvTime = (TextView) findViewById(R.id.tv_time);
+        tvInitTime = (TextView) findViewById(R.id.tv_init_time);
         imageView = (ImageView) findViewById(R.id.img_logo);
         tvConfig = (TextView) findViewById(R.id.tv_config);
         tvMsg = (TextView) findViewById(R.id.tv_msg);
@@ -146,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 iid2Service.getIDInfor(false, b);
                 if (b) {
                     MyAnimation.showLogoAnimation(MainActivity.this, imageView);
+                    startTime = System.currentTimeMillis();
                 } else {
                     imageView.clearAnimation();
                 }
@@ -167,21 +170,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }).start();
     }
 
-    PermissionListener listener = new PermissionListener() {
-        @Override
-        public void onSucceed(int requestCode, @NonNull List<String> grantPermissions) {
-
-        }
-
-        @Override
-        public void onFailed(int requestCode, @NonNull List<String> deniedPermissions) {
-            // 用户否勾选了不再提示并且拒绝了权限，那么提示用户到设置中授权。
-            if (AndPermission.hasAlwaysDeniedPermission(MainActivity.this, deniedPermissions)) {
-                AndPermission.defaultSettingDialog(MainActivity.this, 300).show();
-            }
-        }
-    };
-
     private void initID() {
         ProgressDialogUtils.showProgressDialog(this, "正在初始化");
         new Thread(new Runnable() {
@@ -189,17 +177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void run() {
                 iid2Service = IDManager.getInstance();
                 try {
-//                    DeviceControlSpd deviceControlSpd = new DeviceControlSpd();
-//                    deviceControlSpd.gtPower("printer_open");
-////
-//                    final boolean result = iid2Service.initDev(MainActivity.this, new IDReadCallBack() {
-//                        @OverridedeviceControlSpd.gtPower("charge_on");
-//                        public void callBack(IDInfor infor) {
-//                            Message message = new Message();
-//                            message.obj = infor;
-//                            handler.sendMessage(message);
-//                        }
-//                    }, "/dev/ttyHSL2", 115200, null, null);
+                    long temp = System.currentTimeMillis();
 
                     final boolean result = iid2Service.initDev(MainActivity.this
                             , new IDReadCallBack() {
@@ -210,10 +188,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     handler.sendMessage(message);
                                 }
                             });
-                    showResult(result, "");
+                    //                            },"/dev/ttyMT1",115200, DeviceControlSpd.PowerType.MAIN,new int[]{93});
+                    long costTime = System.currentTimeMillis() - temp;
+                    showResult(result, "",costTime);
 
                 } catch (IOException e) {
-                    showResult(false, e.getMessage());
+                    showResult(false, e.getMessage(),0);
                     e.printStackTrace();
                 }
             }
@@ -221,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void showResult(final boolean result, final String msg) {
+    private void showResult(final boolean result, final String msg, final long time) {
         runOnUiThread(new Runnable() {
                           @Override
                           public void run() {
@@ -240,6 +220,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                           }).show();
                               } else {
                                   showToast("初始化成功");
+                                  btnGet.setChecked(true);
+                                  tvInitTime.setText("初始化时间:"+time);
                               }
                           }
                       }
@@ -269,8 +251,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onPause() {
+        btnGet.setChecked(false);
+        try {
+            //退出 释放二代证模块
+            if (iid2Service != null) {
+                iid2Service.releaseDev();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onPause();
+    }
 
+    @Override
+    protected void onDestroy() {
         super.onDestroy();
     }
 

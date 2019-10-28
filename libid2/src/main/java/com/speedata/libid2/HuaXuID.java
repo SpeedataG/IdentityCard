@@ -258,7 +258,9 @@ public class HuaXuID implements IID2Service {
         byte[] bytes;
         if (!isNeedFingerprinter) {
             bytes = mIDDev.ReadSerial(fd, READ_LEN_WITHOUT_FINGER);
-            Log.d("TEST", "byte len=" + bytes.length + " this" + this);
+            if(bytes!=null) {
+                Log.d("TEST", "byte len=" + bytes.length + " this" + this);
+            }
         } else {
             byte[] temp0 = mIDDev.ReadSerial(fd, READ_LEN_WITHOUT_FINGER, false);
             byte[] temp1 = mIDDev.ReadSerial(fd, READ_NORMAL, false);
