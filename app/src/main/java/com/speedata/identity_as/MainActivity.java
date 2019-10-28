@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.serialport.DeviceControlSpd;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -52,14 +53,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     };
     private TextView tvIDInfor;
     private ImageView imgPic;
+
     private ToggleButton btnGet;
     private TextView tvMsg;
+
     private long startTime;
     private TextView tvConfig;
     private ImageView imageView;
     private TextView tvTime;
     private TextView tvInitTime;
     private IID2Service iid2Service;
+
+
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
@@ -86,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 imgPic.setImageBitmap(bmps);
                 tvMsg.setText("");
             } else {
-                tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg())+left_time+"ms");
+                tvMsg.setText(String.format("ERROR:%s", idInfor1.getErrorMsg()) + left_time + "ms");
             }
         }
     };
@@ -108,28 +113,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             tvConfig.setText("标准配置：\n");
         }
-        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
-        String gpio = "";
-        List<Integer> gpio1 = pasm.getGpio();
-        for (Integer s : gpio1) {
-            gpio += s + ",";
-        }
-        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-                pasm.getPowerType() + " GPIO:" + gpio);
-        //        tvConfig.append("串口:" + "ttyMT0" + "  波特率：" + "115200" + " 上电类型:" +
-        //                "NEW_MAIN" + " GPIO:" + "12");
+//        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
+//        String gpio = "";
+//        List<Integer> gpio1 = pasm.getGpio();
+//        for (Integer s : gpio1) {
+//            gpio += s + ",";
+//        }
+//        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
+//                pasm.getPowerType() + " GPIO:" + gpio);
+        tvConfig.append("串口:" + "ttyMT1" + "  波特率：" + "115200" + " 上电类型:" +
+                "NEW_MAIN" + " GPIO:" + "28 75");
+        initID();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        initID();
+//        initID();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
     }
 
     private void initUI() {
@@ -187,13 +192,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     message.obj = infor;
                                     handler.sendMessage(message);
                                 }
-                            });
+                            }, "dev/ttyMT1", 115200, DeviceControlSpd.PowerType.NEW_MAIN, 28, 75);
                     //                            },"/dev/ttyMT1",115200, DeviceControlSpd.PowerType.MAIN,new int[]{93});
                     long costTime = System.currentTimeMillis() - temp;
-                    showResult(result, "",costTime);
+                    showResult(result, "", costTime);
 
                 } catch (IOException e) {
-                    showResult(false, e.getMessage(),0);
+                    showResult(false, e.getMessage(), 0);
                     e.printStackTrace();
                 }
             }
@@ -221,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                               } else {
                                   showToast("初始化成功");
                                   btnGet.setChecked(true);
-                                  tvInitTime.setText("初始化时间:"+time);
+                                  tvInitTime.setText("初始化时间:" + time);
                               }
                           }
                       }
@@ -251,8 +256,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onPause() {
-        btnGet.setChecked(false);
+    protected void onDestroy() {
         try {
             //退出 释放二代证模块
             if (iid2Service != null) {
@@ -261,11 +265,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (IOException e) {
             e.printStackTrace();
         }
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
         super.onDestroy();
     }
 
