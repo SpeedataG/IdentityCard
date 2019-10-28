@@ -113,16 +113,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else {
             tvConfig.setText("标准配置：\n");
         }
-//        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
-//        String gpio = "";
-//        List<Integer> gpio1 = pasm.getGpio();
-//        for (Integer s : gpio1) {
-//            gpio += s + ",";
-//        }
-//        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
-//                pasm.getPowerType() + " GPIO:" + gpio);
-        tvConfig.append("串口:" + "ttyMT1" + "  波特率：" + "115200" + " 上电类型:" +
-                "NEW_MAIN" + " GPIO:" + "28 75");
+        ReadBean.Id2Bean pasm = ConfigUtils.readConfig(this).getId2();
+        String gpio = "";
+        List<Integer> gpio1 = pasm.getGpio();
+        for (Integer s : gpio1) {
+            gpio += s + ",";
+        }
+        tvConfig.append("串口:" + pasm.getSerialPort() + "  波特率：" + pasm.getBraut() + " 上电类型:" +
+                pasm.getPowerType() + " GPIO:" + gpio);
+//        tvConfig.append("串口:" + "ttyMT1" + "  波特率：" + "115200" + " 上电类型:" +
+//                "NEW_MAIN" + " GPIO:" + "28 75");
         initID();
     }
 
@@ -192,7 +192,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                     message.obj = infor;
                                     handler.sendMessage(message);
                                 }
-                            }, "dev/ttyMT1", 115200, DeviceControlSpd.PowerType.NEW_MAIN, 28, 75);
+                            });
+//                            }, "dev/ttyMT1", 115200, DeviceControlSpd.PowerType.NEW_MAIN, 28, 75);
                     //                            },"/dev/ttyMT1",115200, DeviceControlSpd.PowerType.MAIN,new int[]{93});
                     long costTime = System.currentTimeMillis() - temp;
                     showResult(result, "", costTime);
